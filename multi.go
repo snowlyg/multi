@@ -28,10 +28,10 @@ var (
 )
 
 const (
-	NoneAuthority    string = "" // 空授权
-	AdminAuthority   string = "" // 管理员
-	TenancyAuthority string = "" // 商户
-	GeneralScope     string = "" //普通用户
+	NoneAuthority    string = ""    // 空授权
+	AdminAuthority   string = "999" // 管理员
+	TenancyAuthority string = "998" // 商户
+	GeneralAuthority string = "997" //普通用户
 )
 
 const (
