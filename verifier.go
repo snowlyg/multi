@@ -8,11 +8,6 @@ import (
 	"github.com/kataras/iris/v12/context"
 )
 
-var (
-	pad    = []byte("=")
-	padStr = string(pad)
-)
-
 const (
 	claimsContextKey        = "iris.multi.claims"
 	verifiedTokenContextKey = "iris.multi.token"
@@ -27,9 +22,9 @@ func Get(ctx *context.Context) interface{} {
 	return nil
 }
 
-func GetVerifiedToken(ctx *context.Context) *VerifiedToken {
+func GetVerifiedToken(ctx *context.Context) []byte {
 	if v := ctx.Values().Get(verifiedTokenContextKey); v != nil {
-		if tok, ok := v.(*VerifiedToken); ok {
+		if tok, ok := v.([]byte); ok {
 			return tok
 		}
 	}
@@ -122,8 +117,7 @@ func (v *Verifier) Verify(validators ...TokenValidator) context.Handler {
 			v.ErrorHandler(ctx, err)
 			return
 		}
-		fmt.Printf("token %s\n", verifiedToken)
-		fmt.Printf("rcc %+v\n", rcc)
+
 		ctx.Values().Set(claimsContextKey, rcc)
 		ctx.Values().Set(verifiedTokenContextKey, verifiedToken)
 		ctx.Next()

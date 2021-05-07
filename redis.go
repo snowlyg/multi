@@ -39,7 +39,6 @@ func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 		"authority_id", rcc.AuthorityId,
 		"creation_data", rcc.CreationDate,
 		"expires_in", rcc.ExpiresIn,
-		// "scope", rsv2.Scope,
 	).Result(); err != nil {
 		return fmt.Errorf("to cache token %w", err)
 	}
@@ -118,15 +117,6 @@ func (ra *RedisAuth) UserTokenExpired(token string) error {
 		return err
 	}
 	return nil
-}
-
-// GetUserScope 角色
-func GetUserScope(userType string) uint64 {
-	switch userType {
-	case "admin":
-		return AdminScope
-	}
-	return NoneScope
 }
 
 // SyncUserTokenCache 同步 token 到用户缓存

@@ -28,8 +28,10 @@ var (
 )
 
 const (
-	NoneScope uint64 = iota
-	AdminScope
+	NoneAuthority    string = "" // 空授权
+	AdminAuthority   string = "" // 管理员
+	TenancyAuthority string = "" // 商户
+	GeneralScope     string = "" //普通用户
 )
 
 const (
