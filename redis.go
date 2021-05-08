@@ -37,6 +37,7 @@ func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 		"auth_type", rcc.AuthType,
 		"username", rcc.Username,
 		"authority_id", rcc.AuthorityId,
+		"authority_type", rcc.AuthorityType,
 		"creation_data", rcc.CreationDate,
 		"expires_in", rcc.ExpiresIn,
 	).Result(); err != nil {
@@ -222,6 +223,33 @@ func (ra *RedisAuth) CleanUserTokenCache(userId string) error {
 		}
 	}
 	return nil
+}
+
+// IsAdmin
+func (ra *RedisAuth) IsAdmin(token string) (bool, error) {
+	rcc, err := ra.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == AdminAuthority, nil
+}
+
+// IsTenancy
+func (ra *RedisAuth) IsTenancy(token string) (bool, error) {
+	rcc, err := ra.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == TenancyAuthority, nil
+}
+
+// IsGeneral
+func (ra *RedisAuth) IsGeneral(token string) (bool, error) {
+	rcc, err := ra.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == GeneralAuthority, nil
 }
 
 // Close

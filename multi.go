@@ -28,10 +28,10 @@ var (
 )
 
 const (
-	NoneAuthority    string = ""    // 空授权
-	AdminAuthority   string = "999" // 管理员
-	TenancyAuthority string = "998" // 商户
-	GeneralAuthority string = "997" //普通用户
+	NoneAuthority    int = iota // 空授权
+	AdminAuthority              // 管理员
+	TenancyAuthority            // 商户
+	GeneralAuthority            //普通用户
 )
 
 const (
@@ -55,13 +55,14 @@ var (
 
 // Custom claims structure
 type CustomClaims struct {
-	ID           string `json:"id" redis:"id"`
-	Username     string `json:"username" redis:"username"`
-	AuthorityId  string `json:"authority_id" redis:"authority_id"`
-	LoginType    int    `json:"login_type" redis:"login_type"`
-	AuthType     int    `json:"auth_type" redis:"auth_type"`
-	CreationDate int64  `json:"creation_data" redis:"creation_data"`
-	ExpiresIn    int64  `json:"expires_in" redis:"expires_in"`
+	ID            string `json:"id" redis:"id"`
+	Username      string `json:"username" redis:"username"`
+	AuthorityId   string `json:"authority_id" redis:"authority_id"`
+	AuthorityType int    `json:"authority_type" redis:"authority_type"`
+	LoginType     int    `json:"login_type" redis:"login_type"`
+	AuthType      int    `json:"auth_type" redis:"auth_type"`
+	CreationDate  int64  `json:"creation_data" redis:"creation_data"`
+	ExpiresIn     int64  `json:"expires_in" redis:"expires_in"`
 }
 
 type Config struct {
@@ -132,6 +133,9 @@ type Authentication interface {
 	UpdateUserTokenCacheExpire(token string) error
 	GetCustomClaims(token string) (*CustomClaims, error)
 	GetAuthId(token string) (uint, error)
+	IsAdmin(token string) (bool, error)
+	IsTenancy(token string) (bool, error)
+	IsGeneral(token string) (bool, error)
 	IsUserTokenOver(userId string) bool
 	CleanUserTokenCache(userId string) error
 	Close()

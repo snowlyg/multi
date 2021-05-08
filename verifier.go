@@ -17,12 +17,18 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *context.Context) interface{} {
-	if v := ctx.Values().Get(claimsContextKey); v != nil {
+func Get(ctx *context.Context) *CustomClaims {
+	if v := ctx.Values().Get(claimsContextKey).(*CustomClaims); v != nil {
 		return v
 	}
-
 	return nil
+}
+
+func GetAuthorityType(ctx *context.Context) int {
+	if v := Get(ctx); v != nil {
+		return v.AuthorityType
+	}
+	return 0
 }
 
 func GetVerifiedToken(ctx *context.Context) []byte {
@@ -31,8 +37,40 @@ func GetVerifiedToken(ctx *context.Context) []byte {
 			return tok
 		}
 	}
-
 	return nil
+}
+
+func IsTenancy(ctx *context.Context) bool {
+	if v := GetVerifiedToken(ctx); v != nil {
+		b, err := AuthDriver.IsTenancy(string(v))
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
+}
+
+func IsGeneral(ctx *context.Context) bool {
+	if v := GetVerifiedToken(ctx); v != nil {
+		b, err := AuthDriver.IsGeneral(string(v))
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
+}
+
+func IsAdmin(ctx *context.Context) bool {
+	if v := GetVerifiedToken(ctx); v != nil {
+		b, err := AuthDriver.IsAdmin(string(v))
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
 }
 
 type Verifier struct {

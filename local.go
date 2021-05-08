@@ -2,6 +2,7 @@ package multi
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -210,6 +211,33 @@ func (la *LocalAuth) CleanUserTokenCache(userId string) error {
 	la.Cache.Delete(sKey)
 
 	return nil
+}
+
+// IsAdmin
+func (la *LocalAuth) IsAdmin(token string) (bool, error) {
+	rcc, err := la.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == AdminAuthority, nil
+}
+
+// IsTenancy
+func (la *LocalAuth) IsTenancy(token string) (bool, error) {
+	rcc, err := la.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == TenancyAuthority, nil
+}
+
+// IsGeneral
+func (la *LocalAuth) IsGeneral(token string) (bool, error) {
+	rcc, err := la.GetCustomClaims(token)
+	if err != nil {
+		return false, fmt.Errorf("get auth id %w", err)
+	}
+	return rcc.AuthorityType == GeneralAuthority, nil
 }
 
 // 兼容 redis
