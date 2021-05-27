@@ -68,7 +68,7 @@ type CustomClaims struct {
 	ID            string `json:"id" redis:"id"`
 	Username      string `json:"username" redis:"username"`
 	TenancyId     int64  `json:"tenancy_id" redis:"tenancy_id"`
-	TenancyName   int64  `json:"tenancy_name" redis:"tenancy_name"`
+	TenancyName   string `json:"tenancy_name" redis:"tenancy_name"`
 	AuthorityId   string `json:"authority_id" redis:"authority_id"`
 	AuthorityType int    `json:"authority_type" redis:"authority_type"`
 	LoginType     int    `json:"login_type" redis:"login_type"`
