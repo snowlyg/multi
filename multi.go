@@ -54,9 +54,21 @@ var (
 )
 
 // Custom claims structure
+// ID 用户id
+// Username 用户名
+// TenancyId 商户id
+// TenancyName 商户名称
+// AuthorityId 角色id
+// AuthorityType 角色类型
+// LoginType 登录类型 web,app,wechat
+// AuthType  授权类型 密码,验证码,第三方
+// CreationDate 登录时间
+// ExpiresIn 有效期
 type CustomClaims struct {
 	ID            string `json:"id" redis:"id"`
 	Username      string `json:"username" redis:"username"`
+	TenancyId     int64  `json:"tenancy_id" redis:"tenancy_id"`
+	TenancyName   int64  `json:"tenancy_name" redis:"tenancy_name"`
 	AuthorityId   string `json:"authority_id" redis:"authority_id"`
 	AuthorityType int    `json:"authority_type" redis:"authority_type"`
 	LoginType     int    `json:"login_type" redis:"login_type"`

@@ -36,6 +36,8 @@ func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 		"login_type", rcc.LoginType,
 		"auth_type", rcc.AuthType,
 		"username", rcc.Username,
+		"tenancy_id", rcc.TenancyId,
+		"tenancy_name", rcc.TenancyName,
 		"authority_id", rcc.AuthorityId,
 		"authority_type", rcc.AuthorityType,
 		"creation_data", rcc.CreationDate,
