@@ -134,7 +134,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 		return nil, nil, err
 	}
 
-	if rcc == nil {
+	if rcc == nil || rcc.ID == "" {
 		return nil, nil, errors.New("mutil: invalid token")
 	}
 

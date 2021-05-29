@@ -78,7 +78,7 @@ type CustomClaims struct {
 }
 
 type Config struct {
-	DrvierType       string
+	DriverType       string
 	UniversalOptions *redis.UniversalOptions
 }
 
@@ -121,7 +121,7 @@ var AuthDriver Authentication
 // redis 需要设置redis
 // local 使用本地内存
 func InitDriver(c *Config) error {
-	switch c.DrvierType {
+	switch c.DriverType {
 	case "redis":
 		driver, err := NewRedisAuth(c.UniversalOptions)
 		if err != nil {
