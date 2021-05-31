@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
@@ -24,9 +25,70 @@ func Get(ctx *context.Context) *CustomClaims {
 	return nil
 }
 
+// GetAuthorityType 角色名
 func GetAuthorityType(ctx *context.Context) int {
 	if v := Get(ctx); v != nil {
 		return v.AuthorityType
+	}
+	return 0
+}
+
+// GetAuthorityId 角色id
+func GetAuthorityId(ctx *context.Context) string {
+	if v := Get(ctx); v != nil {
+		return v.AuthorityId
+	}
+	return ""
+}
+
+// GetUserId 用户id
+func GetUserId(ctx *context.Context) int {
+	if v := Get(ctx); v != nil {
+		id, err := strconv.Atoi(v.ID)
+		if err != nil {
+			return 0
+		}
+		return id
+	}
+	return 0
+}
+
+// GetUsername 用户名
+func GetUsername(ctx *context.Context) string {
+	if v := Get(ctx); v != nil {
+		return v.Username
+	}
+	return ""
+}
+
+// GetTenancyId 商户id
+func GetTenancyId(ctx *context.Context) int {
+	if v := Get(ctx); v != nil {
+		return v.TenancyId
+	}
+	return 0
+}
+
+// GetTenancyName 商户名称
+func GetTenancyName(ctx *context.Context) string {
+	if v := Get(ctx); v != nil {
+		return v.TenancyName
+	}
+	return ""
+}
+
+// GetCreationDate 登录时间
+func GetCreationDate(ctx *context.Context) int64 {
+	if v := Get(ctx); v != nil {
+		return v.CreationDate
+	}
+	return 0
+}
+
+// GetExpiresIn 有效期
+func GetExpiresIn(ctx *context.Context) int64 {
+	if v := Get(ctx); v != nil {
+		return v.ExpiresIn
 	}
 	return 0
 }
