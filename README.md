@@ -1,5 +1,5 @@
 # Multi
-Golang Iris Web 框架认证中间件
+Golang gin Web 框架认证中间件
 
 ### 文档
 [文档](https://pkg.go.dev/github.com/snowlyg/multi)
