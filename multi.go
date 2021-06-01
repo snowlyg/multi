@@ -5,14 +5,8 @@ import (
 	"errors"
 	"time"
 
-	iriscontext "github.com/kataras/iris/v12/context"
-
 	"github.com/go-redis/redis/v8"
 )
-
-func init() {
-	iriscontext.SetHandlerName("iris/middleware/multi.*", "iris.multi")
-}
 
 const (
 	GtSessionTokenPrefix        = "GST:"           // token 缓存前缀

@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kataras/iris/v12/context"
+	"github.com/gin-gonic/gin/binding"
 )
 
 // TokenExtractor is a function that takes a context as input and returns
@@ -42,7 +42,7 @@ func FromQuery(ctx *gin.Context) string {
 // this method will not try to read and consume the body.
 func FromJSON(jsonKey string) TokenExtractor {
 	return func(ctx *gin.Context) string {
-		if ctx.ContentType() != context.ContentJSONHeaderValue {
+		if ctx.ContentType() != binding.MIMEJSON {
 			return ""
 		}
 
