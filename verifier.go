@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/kataras/iris/v12/context"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -18,15 +19,17 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *context.Context) *CustomClaims {
-	if v := ctx.Values().Get(claimsContextKey).(*CustomClaims); v != nil {
-		return v
+func Get(ctx *gin.Context) *CustomClaims {
+	if v, b := ctx.Get(claimsContextKey); b {
+		if tok, ok := v.(*CustomClaims); ok {
+			return tok
+		}
 	}
 	return nil
 }
 
 // GetAuthorityType 角色名
-func GetAuthorityType(ctx *context.Context) int {
+func GetAuthorityType(ctx *gin.Context) int {
 	if v := Get(ctx); v != nil {
 		return v.AuthorityType
 	}
@@ -34,7 +37,7 @@ func GetAuthorityType(ctx *context.Context) int {
 }
 
 // GetAuthorityId 角色id
-func GetAuthorityId(ctx *context.Context) string {
+func GetAuthorityId(ctx *gin.Context) string {
 	if v := Get(ctx); v != nil {
 		return v.AuthorityId
 	}
@@ -42,7 +45,7 @@ func GetAuthorityId(ctx *context.Context) string {
 }
 
 // GetUserId 用户id
-func GetUserId(ctx *context.Context) int {
+func GetUserId(ctx *gin.Context) int {
 	if v := Get(ctx); v != nil {
 		id, err := strconv.Atoi(v.ID)
 		if err != nil {
@@ -54,7 +57,7 @@ func GetUserId(ctx *context.Context) int {
 }
 
 // GetUsername 用户名
-func GetUsername(ctx *context.Context) string {
+func GetUsername(ctx *gin.Context) string {
 	if v := Get(ctx); v != nil {
 		return v.Username
 	}
@@ -62,7 +65,7 @@ func GetUsername(ctx *context.Context) string {
 }
 
 // GetTenancyId 商户id
-func GetTenancyId(ctx *context.Context) int {
+func GetTenancyId(ctx *gin.Context) int {
 	if v := Get(ctx); v != nil {
 		return v.TenancyId
 	}
@@ -70,7 +73,7 @@ func GetTenancyId(ctx *context.Context) int {
 }
 
 // GetTenancyName 商户名称
-func GetTenancyName(ctx *context.Context) string {
+func GetTenancyName(ctx *gin.Context) string {
 	if v := Get(ctx); v != nil {
 		return v.TenancyName
 	}
@@ -78,7 +81,7 @@ func GetTenancyName(ctx *context.Context) string {
 }
 
 // GetCreationDate 登录时间
-func GetCreationDate(ctx *context.Context) int64 {
+func GetCreationDate(ctx *gin.Context) int64 {
 	if v := Get(ctx); v != nil {
 		return v.CreationDate
 	}
@@ -86,15 +89,15 @@ func GetCreationDate(ctx *context.Context) int64 {
 }
 
 // GetExpiresIn 有效期
-func GetExpiresIn(ctx *context.Context) int64 {
+func GetExpiresIn(ctx *gin.Context) int64 {
 	if v := Get(ctx); v != nil {
 		return v.ExpiresIn
 	}
 	return 0
 }
 
-func GetVerifiedToken(ctx *context.Context) []byte {
-	if v := ctx.Values().Get(verifiedTokenContextKey); v != nil {
+func GetVerifiedToken(ctx *gin.Context) []byte {
+	if v, b := ctx.Get(verifiedTokenContextKey); b {
 		if tok, ok := v.([]byte); ok {
 			return tok
 		}
@@ -102,7 +105,7 @@ func GetVerifiedToken(ctx *context.Context) []byte {
 	return nil
 }
 
-func IsTenancy(ctx *context.Context) bool {
+func IsTenancy(ctx *gin.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
 		b, err := AuthDriver.IsTenancy(string(v))
 		if err != nil {
@@ -113,7 +116,7 @@ func IsTenancy(ctx *context.Context) bool {
 	return false
 }
 
-func IsGeneral(ctx *context.Context) bool {
+func IsGeneral(ctx *gin.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
 		b, err := AuthDriver.IsGeneral(string(v))
 		if err != nil {
@@ -124,7 +127,7 @@ func IsGeneral(ctx *context.Context) bool {
 	return false
 }
 
-func IsAdmin(ctx *context.Context) bool {
+func IsAdmin(ctx *gin.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
 		b, err := AuthDriver.IsAdmin(string(v))
 		if err != nil {
@@ -138,31 +141,31 @@ func IsAdmin(ctx *context.Context) bool {
 type Verifier struct {
 	Extractors   []TokenExtractor
 	Validators   []TokenValidator
-	ErrorHandler func(ctx *context.Context, err error)
+	ErrorHandler func(ctx *gin.Context, err error)
 }
 
 func NewVerifier(validators ...TokenValidator) *Verifier {
 	return &Verifier{
 		Extractors: []TokenExtractor{FromHeader, FromQuery},
-		ErrorHandler: func(ctx *context.Context, err error) {
-			ctx.StopWithError(401, context.PrivateError(err))
+		ErrorHandler: func(ctx *gin.Context, err error) {
+			ctx.AbortWithError(http.StatusUnauthorized, err)
 		},
 		Validators: validators,
 	}
 }
 
 // Invalidate
-func (v *Verifier) invalidate(ctx *context.Context) {
+func (v *Verifier) invalidate(ctx *gin.Context) {
 	if verifiedToken := GetVerifiedToken(ctx); verifiedToken != nil {
-		ctx.Values().Remove(claimsContextKey)
-		ctx.Values().Remove(verifiedTokenContextKey)
-		ctx.SetUser(nil)
-		ctx.SetLogoutFunc(nil)
+		ctx.Set(claimsContextKey, "")
+		ctx.Set(verifiedTokenContextKey, "")
+		// ctx.SetUser(nil)
+		// ctx.SetLogoutFunc(nil)
 	}
 }
 
 // RequestToken extracts the token from the
-func (v *Verifier) RequestToken(ctx *context.Context) (token string) {
+func (v *Verifier) RequestToken(ctx *gin.Context) (token string) {
 	for _, extract := range v.Extractors {
 		if token = extract(ctx); token != "" {
 			break // ok we found it.
@@ -214,8 +217,8 @@ func GetToken() (string, error) {
 	return string(token), nil
 }
 
-func (v *Verifier) Verify(validators ...TokenValidator) context.Handler {
-	return func(ctx *context.Context) {
+func (v *Verifier) Verify(validators ...TokenValidator) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		token := []byte(v.RequestToken(ctx))
 		verifiedToken, rcc, err := v.VerifyToken(token, validators...)
 		if err != nil {
@@ -224,8 +227,8 @@ func (v *Verifier) Verify(validators ...TokenValidator) context.Handler {
 			return
 		}
 
-		ctx.Values().Set(claimsContextKey, rcc)
-		ctx.Values().Set(verifiedTokenContextKey, verifiedToken)
+		ctx.Set(claimsContextKey, rcc)
+		ctx.Set(verifiedTokenContextKey, verifiedToken)
 		ctx.Next()
 	}
 }
