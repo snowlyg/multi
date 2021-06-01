@@ -138,6 +138,7 @@ func InitDriver(c *Config) error {
 
 // Authentication  认证
 type Authentication interface {
+	GenerateToken(claims *CustomClaims) (string, int64, error)
 	ToCache(token string, rcc *CustomClaims) error
 	SyncUserTokenCache(token string) error
 	DelUserTokenCache(token string) error

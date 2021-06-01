@@ -28,6 +28,26 @@ func NewRedisAuth(options *redis.UniversalOptions) (*RedisAuth, error) {
 	}, nil
 }
 
+// GenerateToken
+func (ra *RedisAuth) GenerateToken(claims *CustomClaims) (string, int64, error) {
+	if ra.IsUserTokenOver(claims.ID) {
+		return "", 0, errors.New("已达到同时登录设备上限")
+	}
+	token, err := GetToken()
+	if err != nil {
+		return "", 0, err
+	}
+	err = ra.ToCache(token, claims)
+	if err != nil {
+		return "", 0, err
+	}
+	if err = ra.SyncUserTokenCache(token); err != nil {
+		return "", 0, err
+	}
+
+	return token, int64(claims.ExpiresIn), err
+}
+
 // ToCache 缓存 token
 func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 	sKey := GtSessionTokenPrefix + token

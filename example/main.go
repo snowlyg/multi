@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -80,7 +79,7 @@ func generateToken() iris.Handler {
 			ExpiresIn:     multi.RedisSessionTimeoutWeb.Milliseconds(),
 		}
 
-		token, _, err := createToken(claims)
+		token, _, err := multi.AuthDriver.GenerateToken(claims)
 		if err != nil {
 			ctx.StopWithStatus(iris.StatusInternalServerError)
 			return
@@ -88,25 +87,6 @@ func generateToken() iris.Handler {
 
 		ctx.WriteString(token)
 	}
-}
-
-func createToken(claims *multi.CustomClaims) (string, int64, error) {
-	if multi.AuthDriver.IsUserTokenOver(claims.ID) {
-		return "", 0, errors.New("已达到同时登录设备上限")
-	}
-	token, err := multi.GetToken()
-	if err != nil {
-		return "", 0, err
-	}
-	err = multi.AuthDriver.ToCache(token, claims)
-	if err != nil {
-		return "", 0, err
-	}
-	if err = multi.AuthDriver.SyncUserTokenCache(token); err != nil {
-		return "", 0, err
-	}
-
-	return token, int64(claims.ExpiresIn), err
 }
 
 func protected(ctx iris.Context) {

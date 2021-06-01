@@ -28,6 +28,26 @@ func NewLocalAuth() *LocalAuth {
 	}
 }
 
+// GenerateToken
+func (la *LocalAuth) GenerateToken(claims *CustomClaims) (string, int64, error) {
+	if la.IsUserTokenOver(claims.ID) {
+		return "", 0, errors.New("已达到同时登录设备上限")
+	}
+	token, err := GetToken()
+	if err != nil {
+		return "", 0, err
+	}
+	err = la.ToCache(token, claims)
+	if err != nil {
+		return "", 0, err
+	}
+	if err = la.SyncUserTokenCache(token); err != nil {
+		return "", 0, err
+	}
+
+	return token, int64(claims.ExpiresIn), err
+}
+
 // GetAuthId
 func (la *LocalAuth) GetAuthId(token string) (uint, error) {
 	sess, err := la.GetCustomClaims(token)
