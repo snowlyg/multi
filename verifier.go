@@ -45,13 +45,13 @@ func GetAuthorityId(ctx *gin.Context) string {
 }
 
 // GetUserId 用户id
-func GetUserId(ctx *gin.Context) int {
+func GetUserId(ctx *gin.Context) uint {
 	if v := Get(ctx); v != nil {
 		id, err := strconv.Atoi(v.ID)
 		if err != nil {
 			return 0
 		}
-		return id
+		return uint(id)
 	}
 	return 0
 }
@@ -65,7 +65,7 @@ func GetUsername(ctx *gin.Context) string {
 }
 
 // GetTenancyId 商户id
-func GetTenancyId(ctx *gin.Context) int {
+func GetTenancyId(ctx *gin.Context) uint {
 	if v := Get(ctx); v != nil {
 		return v.TenancyId
 	}
@@ -159,8 +159,6 @@ func (v *Verifier) invalidate(ctx *gin.Context) {
 	if verifiedToken := GetVerifiedToken(ctx); verifiedToken != nil {
 		ctx.Set(claimsContextKey, "")
 		ctx.Set(verifiedTokenContextKey, "")
-		// ctx.SetUser(nil)
-		// ctx.SetLogoutFunc(nil)
 	}
 }
 
