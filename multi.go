@@ -42,9 +42,9 @@ const (
 )
 
 var (
-	RedisSessionTimeoutWeb = 30 * time.Minute
-	RedisSessionTimeoutApp = 24 * time.Hour
-	RedisSessionTimeoutWx  = 5 * 52 * 168 * time.Hour
+	RedisSessionTimeoutWeb = 4 * time.Hour            // 4 小时
+	RedisSessionTimeoutApp = 7 * 24 * time.Hour       // 7 天
+	RedisSessionTimeoutWx  = 5 * 52 * 168 * time.Hour // 1年
 )
 
 // Custom claims structure

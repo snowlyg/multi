@@ -211,7 +211,8 @@ func GetToken() (string, error) {
 	}
 	now := Base64Encode([]byte(time.Now().Local().Format(time.RFC3339)))
 	nodeId := Base64Encode(node.Generate().Bytes())
-	token := joinParts(nodeId, now)
+	token := Base64Encode(joinParts(nodeId, now))
+	token = joinParts(token, nodeId)
 	return string(token), nil
 }
 
