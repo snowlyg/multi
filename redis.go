@@ -65,6 +65,10 @@ func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 	).Result(); err != nil {
 		return fmt.Errorf("to cache token %w", err)
 	}
+	err := ra.UpdateUserTokenCacheExpire(token)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
