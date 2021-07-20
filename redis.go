@@ -89,9 +89,9 @@ func (ra *RedisAuth) GetAuthId(token string) (uint, error) {
 //  GetCustomClaims session
 func (ra *RedisAuth) GetCustomClaims(token string) (*CustomClaims, error) {
 	sKey := GtSessionTokenPrefix + token
-
 	_, err := ra.Client.Exists(context.Background(), sKey).Result()
 	if err != nil {
+		ra.UserTokenExpired(token)
 		return nil, ErrTokenInvalid
 	}
 	pp := new(CustomClaims)
@@ -156,19 +156,11 @@ func (ra *RedisAuth) SyncUserTokenCache(token string) error {
 	if _, err := ra.Client.SAdd(ctx, sKey, token).Result(); err != nil {
 		return fmt.Errorf("sync user token cache redis sadd %w", err)
 	}
-	err = ra.SetExpire(sKey, rcc.LoginType)
-	if err != nil {
-		return err
-	}
 
 	sKey2 := GtSessionBindUserPrefix + token
 	_, err = ra.Client.SAdd(ctx, sKey2, sKey).Result()
 	if err != nil {
 		return fmt.Errorf("sync user token cache %w", err)
-	}
-	err = ra.SetExpire(sKey2, rcc.LoginType)
-	if err != nil {
-		return err
 	}
 	return nil
 }
