@@ -65,7 +65,7 @@ func (ra *RedisAuth) ToCache(token string, rcc *CustomClaims) error {
 	).Result(); err != nil {
 		return fmt.Errorf("to cache token %w", err)
 	}
-	err := ra.UpdateUserTokenCacheExpire(token)
+	err := ra.SetExpire(sKey, rcc.LoginType)
 	if err != nil {
 		return err
 	}
@@ -156,10 +156,19 @@ func (ra *RedisAuth) SyncUserTokenCache(token string) error {
 	if _, err := ra.Client.SAdd(ctx, sKey, token).Result(); err != nil {
 		return fmt.Errorf("sync user token cache redis sadd %w", err)
 	}
+	err = ra.SetExpire(sKey, rcc.LoginType)
+	if err != nil {
+		return err
+	}
+
 	sKey2 := GtSessionBindUserPrefix + token
 	_, err = ra.Client.SAdd(ctx, sKey2, sKey).Result()
 	if err != nil {
 		return fmt.Errorf("sync user token cache %w", err)
+	}
+	err = ra.SetExpire(sKey2, rcc.LoginType)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -173,18 +182,25 @@ func (ra *RedisAuth) UpdateUserTokenCacheExpire(token string) error {
 	if rcc == nil {
 		return errors.New("token cache is nil")
 	}
-	if _, err = ra.Client.Expire(ctx, GtSessionTokenPrefix+token, ra.getTokenExpire(rcc)).Result(); err != nil {
+	if err = ra.SetExpire(GtSessionTokenPrefix+token, rcc.LoginType); err != nil {
+		return fmt.Errorf("update user token cache expire redis expire %w", err)
+	}
+	return nil
+}
+
+func (ra *RedisAuth) SetExpire(key string, loginType int) error {
+	if _, err := ra.Client.Expire(ctx, key, ra.getTokenExpire(loginType)).Result(); err != nil {
 		return fmt.Errorf("update user token cache expire redis expire %w", err)
 	}
 	return nil
 }
 
 // getTokenExpire 过期时间
-func (ra *RedisAuth) getTokenExpire(rsv2 *CustomClaims) time.Duration {
+func (ra *RedisAuth) getTokenExpire(loginType int) time.Duration {
 	timeout := RedisSessionTimeoutApp
-	if rsv2.LoginType == LoginTypeWeb {
+	if loginType == LoginTypeWeb {
 		timeout = RedisSessionTimeoutWeb
-	} else if rsv2.LoginType == LoginTypeWx {
+	} else if loginType == LoginTypeWx {
 		timeout = RedisSessionTimeoutWx
 	}
 	return timeout
