@@ -39,12 +39,14 @@ const (
 	LoginTypeWeb int = iota
 	LoginTypeApp
 	LoginTypeWx
+	LoginTypeDevice
 )
 
 var (
-	RedisSessionTimeoutWeb = 4 * time.Hour            // 4 小时
-	RedisSessionTimeoutApp = 7 * 24 * time.Hour       // 7 天
-	RedisSessionTimeoutWx  = 5 * 52 * 168 * time.Hour // 1年
+	RedisSessionTimeoutWeb    = 4 * time.Hour            // 4 小时
+	RedisSessionTimeoutApp    = 7 * 24 * time.Hour       // 7 天
+	RedisSessionTimeoutWx     = 5 * 52 * 168 * time.Hour // 1年
+	RedisSessionTimeoutDevice = 5 * 52 * 168 * time.Hour // 1年
 )
 
 // Custom claims structure
@@ -146,4 +148,20 @@ type Authentication interface {
 	IsUserTokenOver(userId string) bool
 	CleanUserTokenCache(userId string) error
 	Close()
+}
+
+// getTokenExpire 过期时间
+func getTokenExpire(loginType int) time.Duration {
+	switch loginType {
+	case LoginTypeWeb:
+		return RedisSessionTimeoutWeb
+	case LoginTypeWx:
+		return RedisSessionTimeoutWx
+	case LoginTypeApp:
+		return RedisSessionTimeoutApp
+	case LoginTypeDevice:
+		return RedisSessionTimeoutDevice
+	default:
+		return RedisSessionTimeoutWeb
+	}
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
@@ -181,21 +180,10 @@ func (ra *RedisAuth) UpdateUserTokenCacheExpire(token string) error {
 }
 
 func (ra *RedisAuth) SetExpire(key string, loginType int) error {
-	if _, err := ra.Client.Expire(ctx, key, ra.getTokenExpire(loginType)).Result(); err != nil {
+	if _, err := ra.Client.Expire(ctx, key, getTokenExpire(loginType)).Result(); err != nil {
 		return fmt.Errorf("update user token cache expire redis expire %w", err)
 	}
 	return nil
-}
-
-// getTokenExpire 过期时间
-func (ra *RedisAuth) getTokenExpire(loginType int) time.Duration {
-	timeout := RedisSessionTimeoutApp
-	if loginType == LoginTypeWeb {
-		timeout = RedisSessionTimeoutWeb
-	} else if loginType == LoginTypeWx {
-		timeout = RedisSessionTimeoutWx
-	}
-	return timeout
 }
 
 // DelUserTokenCache 删除token缓存

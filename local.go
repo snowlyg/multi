@@ -63,7 +63,7 @@ func (la *LocalAuth) GetAuthId(token string) (uint, error) {
 
 func (la *LocalAuth) ToCache(token string, rcc *CustomClaims) error {
 	sKey := GtSessionTokenPrefix + token
-	la.Cache.Set(sKey, rcc, la.getTokenExpire(rcc.LoginType))
+	la.Cache.Set(sKey, rcc, getTokenExpire(rcc.LoginType))
 	return nil
 }
 
@@ -80,7 +80,7 @@ func (la *LocalAuth) SyncUserTokenCache(token string) error {
 	}
 	ts = append(ts, token)
 
-	la.Cache.Set(sKey, ts, la.getTokenExpire(rcc.LoginType))
+	la.Cache.Set(sKey, ts, getTokenExpire(rcc.LoginType))
 
 	sKey2 := GtSessionBindUserPrefix + token
 	sys := skeys{}
@@ -88,7 +88,7 @@ func (la *LocalAuth) SyncUserTokenCache(token string) error {
 		sys = keys.(skeys)
 	}
 	sys = append(sys, sKey)
-	la.Cache.Set(sKey2, sys, la.getTokenExpire(rcc.LoginType))
+	la.Cache.Set(sKey2, sys, getTokenExpire(rcc.LoginType))
 	return nil
 }
 
@@ -101,7 +101,7 @@ func (la *LocalAuth) DelUserTokenCache(token string) error {
 		return errors.New("token cache is nil")
 	}
 	sKey := GtSessionUserPrefix + rcc.ID
-	exp := la.getTokenExpire(rcc.LoginType)
+	exp := getTokenExpire(rcc.LoginType)
 	if utokens, ufound := la.Cache.Get(sKey); ufound {
 		t := utokens.(tokens)
 		for index, u := range t {
@@ -135,7 +135,6 @@ func (la *LocalAuth) UserTokenExpired(token string) error {
 		return errors.New("token cache is nil")
 	}
 
-	exp := la.getTokenExpire(rsv2.LoginType)
 	uKey := GtSessionBindUserPrefix + token
 	if sKeys, found := la.Cache.Get(uKey); !found {
 		return errors.New("token skey is empty")
@@ -149,7 +148,7 @@ func (la *LocalAuth) UserTokenExpired(token string) error {
 				for index, u := range t {
 					if u == token {
 						utokens = append(t[0:index], t[index:]...)
-						la.Cache.Set(v, utokens, exp)
+						la.Cache.Set(v, utokens, getTokenExpire(rsv2.LoginType))
 					}
 				}
 			}
@@ -168,20 +167,9 @@ func (la *LocalAuth) UpdateUserTokenCacheExpire(token string) error {
 	if rsv2 == nil {
 		return errors.New("token cache is nil")
 	}
-	la.Cache.Set(GtSessionTokenPrefix+token, rsv2, la.getTokenExpire(rsv2.LoginType))
+	la.Cache.Set(GtSessionTokenPrefix+token, rsv2, getTokenExpire(rsv2.LoginType))
 
 	return nil
-}
-
-// getTokenExpire 过期时间
-func (la *LocalAuth) getTokenExpire(loginType int) time.Duration {
-	timeout := RedisSessionTimeoutApp
-	if loginType == LoginTypeWeb {
-		timeout = RedisSessionTimeoutWeb
-	} else if loginType == LoginTypeWx {
-		timeout = RedisSessionTimeoutWx
-	}
-	return timeout
 }
 
 func (la *LocalAuth) GetCustomClaims(token string) (*CustomClaims, error) {
