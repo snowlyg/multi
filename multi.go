@@ -75,6 +75,7 @@ type CustomClaims struct {
 
 type Config struct {
 	DriverType       string
+	TokenMaxCount    int64
 	UniversalOptions *redis.UniversalOptions
 }
 
@@ -117,6 +118,9 @@ var AuthDriver Authentication
 // redis 需要设置redis
 // local 使用本地内存
 func InitDriver(c *Config) error {
+	if c.TokenMaxCount == 0 {
+		c.TokenMaxCount = 10
+	}
 	switch c.DriverType {
 	case "redis":
 		driver, err := NewRedisAuth(c.UniversalOptions)
@@ -129,24 +133,24 @@ func InitDriver(c *Config) error {
 	default:
 		AuthDriver = NewLocalAuth()
 	}
+	err := AuthDriver.SetUserTokenMaxCount(c.TokenMaxCount)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // Authentication  认证
 type Authentication interface {
-	GenerateToken(claims *CustomClaims) (string, int64, error)
-	ToCache(token string, rcc *CustomClaims) error
-	SyncUserTokenCache(token string) error
-	DelUserTokenCache(token string) error
-	UserTokenExpired(token string) error
-	UpdateUserTokenCacheExpire(token string) error
-	GetCustomClaims(token string) (*CustomClaims, error)
-	GetAuthId(token string) (uint, error)
+	GenerateToken(claims *CustomClaims) (string, int64, error) // 生成 token
+	DelUserTokenCache(token string) error                      // 清除用户当前token信息
+	UpdateUserTokenCacheExpire(token string) error             // 更新token 过期时间
+	GetCustomClaims(token string) (*CustomClaims, error)       // 获取token用户信息
+	CleanUserTokenCache(userId string) error                   // 清除用户所有 token
+	SetUserTokenMaxCount(tokenMaxCount int64) error            // 设置最大登录限制
 	IsAdmin(token string) (bool, error)
 	IsTenancy(token string) (bool, error)
 	IsGeneral(token string) (bool, error)
-	IsUserTokenOver(userId string) bool
-	CleanUserTokenCache(userId string) error
 	Close()
 }
 
