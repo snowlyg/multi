@@ -74,9 +74,9 @@ type CustomClaims struct {
 }
 
 type Config struct {
-	DriverType       string
-	TokenMaxCount    int64
-	UniversalOptions redis.UniversalClient
+	DriverType      string
+	TokenMaxCount   int64
+	UniversalClient redis.UniversalClient
 }
 
 type VerifiedToken struct {
@@ -123,7 +123,7 @@ func InitDriver(c *Config) error {
 	}
 	switch c.DriverType {
 	case "redis":
-		driver, err := NewRedisAuth(c.UniversalOptions)
+		driver, err := NewRedisAuth(c.UniversalClient)
 		if err != nil {
 			return err
 		}

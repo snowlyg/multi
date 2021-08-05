@@ -33,8 +33,8 @@ func init() {
 	}
 
 	err := multi.InitDriver(&multi.Config{
-		DriverType:       "redis",
-		UniversalOptions: redis.NewUniversalClient(options)})
+		DriverType:      "redis",
+		UniversalClient: redis.NewUniversalClient(options)})
 	if err != nil {
 		panic(fmt.Sprintf("auth is not init get err %v\n", err))
 	}
