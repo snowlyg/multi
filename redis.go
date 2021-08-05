@@ -13,8 +13,7 @@ type RedisAuth struct {
 }
 
 // NewRedisAuth
-func NewRedisAuth(options *redis.UniversalOptions) (*RedisAuth, error) {
-	client := redis.NewUniversalClient(options)
+func NewRedisAuth(client redis.UniversalClient) (*RedisAuth, error) {
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
 		return nil, fmt.Errorf("redis ping %w", err)

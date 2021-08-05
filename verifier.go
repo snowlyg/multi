@@ -205,13 +205,14 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 }
 
 func GetToken() (string, error) {
-	node, err := snowflake.NewNode(1)
+	node, err := snowflake.NewNode(0)
 	if err != nil {
 		return "", fmt.Errorf("mutil: create token %w", err)
 	}
-	now := Base64Encode([]byte(time.Now().Local().Format(time.RFC3339)))
-	nodeId := Base64Encode(node.Generate().Bytes())
-	token := Base64Encode(joinParts(nodeId, now))
+
+	// 混入两个时间，防止并发token重复
+	nodeId := Base64Encode(joinParts(node.Generate().Bytes(), Base64Encode([]byte(time.Now().Local().Format(time.RFC3339Nano)))))
+	token := Base64Encode(joinParts(nodeId, Base64Encode([]byte(time.Now().Local().Format(time.RFC3339Nano)))))
 	token = joinParts(token, nodeId)
 	return string(token), nil
 }

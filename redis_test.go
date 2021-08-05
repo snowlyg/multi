@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	redisAuth, _ = NewRedisAuth(&redis.UniversalOptions{
+	options = &redis.UniversalOptions{
+		DB:          1,
 		Addrs:       []string{"127.0.0.1:6379"},
 		Password:    "Chindeo",
 		PoolSize:    10,
@@ -27,9 +28,11 @@ var (
 			}
 			return conn, err
 		},
-	})
-	rToken      = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
-	redisClaims = &CustomClaims{
+	}
+
+	redisAuth, _ = NewRedisAuth(redis.NewUniversalClient(options))
+	rToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
+	redisClaims  = &CustomClaims{
 		ID:            "121321",
 		Username:      "username",
 		TenancyId:     1,
@@ -218,14 +221,13 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		t.Fatalf("set user token max count %v", err)
 	}
 	for i := 0; i < 6; i++ {
-		_, _, err := redisAuth.GenerateToken(cc)
+		token, _, err := redisAuth.GenerateToken(cc)
 		if err != nil {
-			fmt.Println(err)
+			t.Fatal(err)
 		}
-
+		fmt.Println(token)
 	}
 	t.Run("test redis is user token over", func(t *testing.T) {
-
 		isOver, err := redisAuth.isUserTokenOver(cc.ID)
 		if err != nil {
 			t.Fatalf("is user token over get %v", err)
@@ -245,8 +247,14 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 
 func TestRedisSetUserTokenMaxCount(t *testing.T) {
 	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
+		t.Fatalf("set user token max count %v", err)
+	}
 	for i := 0; i < 6; i++ {
-		redisAuth.GenerateToken(redisClaims)
+		_, _, err := redisAuth.GenerateToken(redisClaims)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	t.Run("test redis set user token max count", func(t *testing.T) {
 		if err := redisAuth.SetUserTokenMaxCount(5); err != nil {

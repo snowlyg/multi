@@ -76,7 +76,7 @@ type CustomClaims struct {
 type Config struct {
 	DriverType       string
 	TokenMaxCount    int64
-	UniversalOptions *redis.UniversalOptions
+	UniversalOptions redis.UniversalClient
 }
 
 type VerifiedToken struct {
