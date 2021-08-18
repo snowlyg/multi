@@ -11,6 +11,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -205,14 +206,14 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 }
 
 func GetToken() (string, error) {
-	node, err := snowflake.NewNode(0)
+	node, err := snowflake.NewNode(1)
 	if err != nil {
 		return "", fmt.Errorf("mutil: create token %w", err)
 	}
 
 	// 混入两个时间，防止并发token重复
 	nodeId := Base64Encode(joinParts(node.Generate().Bytes(), Base64Encode([]byte(time.Now().Local().Format(time.RFC3339Nano)))))
-	token := Base64Encode(joinParts(nodeId, Base64Encode([]byte(time.Now().Local().Format(time.RFC3339Nano)))))
+	token := Base64Encode(joinParts(nodeId, Base64Encode(uuid.NewV4().Bytes())))
 	token = joinParts(token, nodeId)
 	return string(token), nil
 }

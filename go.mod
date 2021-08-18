@@ -10,6 +10,7 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
+	github.com/satori/go.uuid v1.2.0
 	golang.org/x/crypto v0.0.0-20210218145215-b8e89b74b9df // indirect
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
 	golang.org/x/sys v0.0.0-20210218155724-8ebf48af031b // indirect

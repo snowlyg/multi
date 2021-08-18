@@ -278,7 +278,7 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		redisAuth.GenerateToken(redisClaims)
 	}
-	t.Run("test del user token token", func(t *testing.T) {
+	t.Run("test del user token", func(t *testing.T) {
 		if err := redisAuth.CleanUserTokenCache(redisClaims.ID); err != nil {
 			t.Fatalf("clear user token cache %v", err)
 		}
@@ -289,5 +289,15 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 		if count != 0 {
 			t.Error("user token count want 0 but get not 0")
 		}
+	})
+}
+func TestRedisCheckTokenHash(t *testing.T) {
+	token, _, _ := redisAuth.GenerateToken(redisClaims)
+	t.Run("test check token hash", func(t *testing.T) {
+		mun, err := redisAuth.checkTokenHash(token)
+		if err != nil {
+			t.Fatalf("test check token hash %v", err)
+		}
+		t.Logf("test check token hash get %d", mun)
 	})
 }
