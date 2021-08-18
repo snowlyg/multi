@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/chindeo/pkg/file"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 )
@@ -212,9 +212,8 @@ func GetToken() (string, error) {
 	}
 
 	// 混入两个时间，防止并发token重复
-	nodeId := Base64Encode(joinParts(node.Generate().Bytes(), Base64Encode([]byte(time.Now().Local().Format(time.RFC3339Nano)))))
-	token := Base64Encode(joinParts(nodeId, Base64Encode(uuid.NewV4().Bytes())))
-	token = joinParts(token, nodeId)
+	nodeId, _ := file.Md5Byte(Base64Encode(node.Generate().Bytes()))
+	token, _ := file.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeId))))
 	return string(token), nil
 }
 
