@@ -212,9 +212,10 @@ func GetToken() (string, error) {
 	}
 
 	// 混入两个时间，防止并发token重复
-	nodeId, _ := file.Md5Byte(Base64Encode(node.Generate().Bytes()))
-	token, _ := file.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeId))))
-	return string(token), nil
+	nodeBytes, _ := file.Md5Byte(Base64Encode(node.Generate().Bytes()))
+	uuidBytes, _ := file.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeBytes))))
+	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
+	return string(Base64Encode([]byte(token))), nil
 }
 
 func (v *Verifier) Verify(validators ...TokenValidator) gin.HandlerFunc {

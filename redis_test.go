@@ -3,7 +3,6 @@ package multi
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -57,6 +56,8 @@ func TestRedisGenerateToken(t *testing.T) {
 		if token == "" {
 			t.Error("generate token is empty")
 		}
+
+		t.Logf("token:%s\n", token)
 
 		if expiresIn != redisClaims.ExpiresIn {
 			t.Errorf("generate token expires want %v but get %v", redisClaims.ExpiresIn, expiresIn)
@@ -225,7 +226,7 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		fmt.Println(token)
+		t.Logf("token:%s\n", token)
 	}
 	t.Run("test redis is user token over", func(t *testing.T) {
 		isOver, err := redisAuth.isUserTokenOver(cc.ID)
