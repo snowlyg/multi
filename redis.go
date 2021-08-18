@@ -78,21 +78,28 @@ func (ra *RedisAuth) GetCustomClaims(token string) (*CustomClaims, error) {
 	if err != nil {
 		return nil, err
 	}
-	pp := new(CustomClaims)
-	if err := ra.Client.HGetAll(ctx, GtSessionTokenPrefix+token).Scan(pp); err != nil {
+	rcc := new(CustomClaims)
+	if err := ra.Client.HGetAll(ctx, GtSessionTokenPrefix+token).Scan(rcc); err != nil {
 		return nil, fmt.Errorf("get custom claims redis hgetall %w", err)
 	}
-	return pp, nil
+
+	if rcc == nil || rcc.ID == "" {
+		rcc, err = ra.GetCustomClaims(token)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return rcc, nil
 }
 
 func (ra *RedisAuth) checkTokenHash(token string) (int64, error) {
 	mun, err := ra.Client.Exists(ctx, GtSessionTokenPrefix+token).Result()
 	if err != nil || mun == 0 {
-		err = ra.delTokenCache(token)
-		if err != nil {
+		if err = ra.delTokenCache(token); err != nil {
 			return mun, err
 		}
-		return mun, ErrTokenInvalid
+		return mun, err
 	}
 	return mun, nil
 }

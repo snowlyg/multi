@@ -194,12 +194,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 
 	rcc, err := AuthDriver.GetCustomClaims(string(token))
 	if err != nil {
-		AuthDriver.DelUserTokenCache(string(token))
 		return nil, nil, err
-	}
-
-	if rcc == nil || rcc.ID == "" {
-		return nil, nil, errors.New("mutil: invalid token")
 	}
 
 	return token, rcc, nil

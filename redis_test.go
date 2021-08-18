@@ -3,6 +3,7 @@ package multi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -222,11 +223,7 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		t.Fatalf("set user token max count %v", err)
 	}
 	for i := 0; i < 6; i++ {
-		token, _, err := redisAuth.GenerateToken(cc)
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Logf("token:%s\n", token)
+		go redisAuth.GenerateToken(cc)
 	}
 	t.Run("test redis is user token over", func(t *testing.T) {
 		isOver, err := redisAuth.isUserTokenOver(cc.ID)
@@ -252,10 +249,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 		t.Fatalf("set user token max count %v", err)
 	}
 	for i := 0; i < 6; i++ {
-		_, _, err := redisAuth.GenerateToken(redisClaims)
-		if err != nil {
-			t.Fatal(err)
-		}
+		go redisAuth.GenerateToken(redisClaims)
 	}
 	t.Run("test redis set user token max count", func(t *testing.T) {
 		if err := redisAuth.SetUserTokenMaxCount(5); err != nil {
@@ -277,7 +271,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 func TestRedisCleanUserTokenCache(t *testing.T) {
 	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
 	for i := 0; i < 6; i++ {
-		redisAuth.GenerateToken(redisClaims)
+		go redisAuth.GenerateToken(redisClaims)
 	}
 	t.Run("test del user token", func(t *testing.T) {
 		if err := redisAuth.CleanUserTokenCache(redisClaims.ID); err != nil {
@@ -294,11 +288,27 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 }
 func TestRedisCheckTokenHash(t *testing.T) {
 	token, _, _ := redisAuth.GenerateToken(redisClaims)
+	t.Logf("test check token hash get %s\n", token)
 	t.Run("test check token hash", func(t *testing.T) {
 		mun, err := redisAuth.checkTokenHash(token)
 		if err != nil {
 			t.Fatalf("test check token hash %v", err)
 		}
-		t.Logf("test check token hash get %d", mun)
+		t.Logf("test check token hash get %d\n", mun)
+	})
+}
+
+func TestRedisGetCustomClaims(t *testing.T) {
+	t.Run("test get custom claims", func(t *testing.T) {
+		for i := 0; i < 6; i++ {
+			go func() {
+				cc, err := redisAuth.GetCustomClaims("TmpKa09HRXpOekptTlRNek1UWXlZV1ZqTVdRMk1HTmtPV05tTVdObU5Eay5PVEU1TWpaak5HVmtaalpqWlRabU5XUXlNV0ZsWVdFNFpqZ3dZMlEzWVdN")
+				if err != nil {
+					fmt.Printf("get custom claims  %v", err)
+				}
+				fmt.Printf("test check token hash get %+v\n", cc)
+			}()
+		}
+		time.Sleep(3 * time.Second)
 	})
 }
