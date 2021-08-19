@@ -18,7 +18,7 @@ func init() {
 	options := &redis.UniversalOptions{
 		Addrs:       []string{"127.0.0.1:6379"},
 		Password:    "Chindeo",
-		PoolSize:    10,
+		PoolSize:    10, // 设置太低的时候，请求频繁会导致异常掉线
 		IdleTimeout: 300 * time.Second,
 		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			conn, err := net.Dial(network, addr)

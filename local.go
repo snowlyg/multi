@@ -130,34 +130,79 @@ func (la *LocalAuth) GetCustomClaims(token string) (*CustomClaims, error) {
 	}
 }
 
+//  GetTokenByClaims 获取用户信息
+func (la *LocalAuth) GetTokenByClaims(cla *CustomClaims) (string, error) {
+	userTokens, err := la.getUserTokens(cla.ID)
+	if err != nil {
+		return "", err
+	}
+	clas, err := la.getCustomClaimses(userTokens)
+	if err != nil {
+		return "", err
+	}
+	for token, existCla := range clas {
+		if cla.AuthType == existCla.AuthType &&
+			cla.ID == existCla.ID &&
+			cla.AuthorityType == existCla.AuthorityType &&
+			cla.TenancyId == existCla.TenancyId &&
+			cla.AuthorityId == existCla.AuthorityId &&
+			cla.LoginType == existCla.LoginType {
+			return token, nil
+		}
+	}
+	return "", nil
+}
+
+// getUserTokens 获取登录数量
+func (la *LocalAuth) getUserTokens(userId string) (tokens, error) {
+	if utokens, ufound := la.Cache.Get(GtSessionUserPrefix + userId); ufound {
+		if utokens != nil {
+			return utokens.(tokens), nil
+		}
+	}
+	return nil, nil
+}
+
+//  getCustomClaimses 获取用户信息
+func (la *LocalAuth) getCustomClaimses(tokens tokens) (map[string]*CustomClaims, error) {
+	clas := make(map[string]*CustomClaims, la.getUserTokenMaxCount())
+	for _, token := range tokens {
+		cla, err := la.GetCustomClaims(token)
+		if err != nil {
+			continue
+		}
+		clas[token] = cla
+	}
+
+	return clas, nil
+}
+
 func (la *LocalAuth) isUserTokenOver(userId string) bool {
 	return la.getUserTokenCount(userId) >= la.getUserTokenMaxCount()
 }
 
 // getUserTokenCount 获取登录数量
 func (la *LocalAuth) getUserTokenCount(userId string) int64 {
-	return la.checkMaxCount(GtSessionUserPrefix + userId)
+	return la.checkMaxCount(userId)
 }
 
-func (la *LocalAuth) checkMaxCount(userPrefixKey string) int64 {
-	if utokens, ufound := la.Cache.Get(userPrefixKey); ufound {
-		if utokens == nil {
-			return 0
-		}
-		t := utokens.(tokens)
-		for index, u := range t {
-			if _, found := la.Cache.Get(GtSessionTokenPrefix + u); !found {
-				if len(t) == 1 {
-					utokens = nil
-				} else {
-					utokens = append(t[0:index], t[index:]...)
-				}
+func (la *LocalAuth) checkMaxCount(userId string) int64 {
+	utokens, _ := la.getUserTokens(userId)
+	if utokens == nil {
+		return 0
+	}
+	for index, u := range utokens {
+		if _, found := la.Cache.Get(GtSessionTokenPrefix + u); !found {
+			if len(utokens) == 1 {
+				utokens = nil
+			} else {
+				utokens = append(utokens[0:index], utokens[index:]...)
 			}
 		}
-		la.Cache.Set(userPrefixKey, utokens, cache.NoExpiration)
-		return int64(len(t))
 	}
-	return 0
+	la.Cache.Set(GtSessionUserPrefix+userId, utokens, cache.NoExpiration)
+	return int64(len(utokens))
+
 }
 
 // getUserTokenMaxCount 最大登录限制
@@ -177,18 +222,18 @@ func (la *LocalAuth) SetUserTokenMaxCount(tokenMaxCount int64) error {
 
 // CleanUserTokenCache 清空token缓存
 func (la *LocalAuth) CleanUserTokenCache(userId string) error {
-	sKey := GtSessionUserPrefix + userId
-	if userTokens, found := la.Cache.Get(sKey); !found {
+	utokens, _ := la.getUserTokens(userId)
+	if utokens == nil {
 		return nil
-	} else {
-		for _, token := range userTokens.(tokens) {
-			err := la.delTokenCache(token)
-			if err != nil {
-				continue
-			}
+	}
+
+	for _, token := range utokens {
+		err := la.delTokenCache(token)
+		if err != nil {
+			continue
 		}
 	}
-	la.Cache.Delete(sKey)
+	la.Cache.Delete(GtSessionUserPrefix + userId)
 
 	return nil
 }

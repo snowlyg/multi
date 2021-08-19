@@ -1,7 +1,6 @@
 package multi
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -16,9 +15,12 @@ const (
 )
 
 var (
-	ctx                                = context.Background()
-	ErrTokenInvalid                    = errors.New("token is invalid")
 	GtSessionUserMaxTokenDefault int64 = 10
+)
+var (
+	ErrTokenInvalid      = errors.New("token 不可用！")
+	ErrEmptyToken        = errors.New("token 为空！")
+	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限！")
 )
 
 const (
@@ -146,6 +148,7 @@ type Authentication interface {
 	DelUserTokenCache(token string) error                      // 清除用户当前token信息
 	UpdateUserTokenCacheExpire(token string) error             // 更新token 过期时间
 	GetCustomClaims(token string) (*CustomClaims, error)       // 获取token用户信息
+	GetTokenByClaims(claims *CustomClaims) (string, error)     // 通过用户信息获取token
 	CleanUserTokenCache(userId string) error                   // 清除用户所有 token
 	SetUserTokenMaxCount(tokenMaxCount int64) error            // 设置最大登录限制
 	IsAdmin(token string) (bool, error)

@@ -2,7 +2,9 @@ package multi
 
 import (
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 )
 
 var (
@@ -237,4 +239,159 @@ func TestCleanUserTokenCache(t *testing.T) {
 			t.Error("user token count want 0 but get not 0")
 		}
 	})
+}
+
+func TestLocalGetCustomClaims(t *testing.T) {
+	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	var token string
+	redisClaims.LoginType = 3
+	token, _, err := localAuth.GenerateToken(redisClaims)
+	if err != nil {
+		t.Fatalf("get custom claims  %v", err)
+	}
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		redisClaims.LoginType = i
+		go func(i int) {
+			localAuth.GenerateToken(redisClaims)
+			wg.Done()
+		}(i)
+		wg.Wait()
+	}
+	t.Run("test get custom claims", func(t *testing.T) {
+		for i := 0; i < 4; i++ {
+			go func() {
+				cc, err := localAuth.GetCustomClaims(token)
+				if err != nil {
+					t.Errorf("get custom claims  %v", err)
+				}
+				fmt.Printf("test check token hash get %+v\n", cc)
+			}()
+		}
+		time.Sleep(3 * time.Second)
+	})
+}
+
+func TestLocalGetUserTokens(t *testing.T) {
+	cc := &CustomClaims{
+		ID:            "121321",
+		Username:      "username",
+		TenancyId:     1,
+		TenancyName:   "username",
+		AuthorityId:   "999",
+		AuthorityType: AdminAuthority,
+		LoginType:     LoginTypeDevice,
+		AuthType:      AuthPwd,
+		CreationDate:  10000,
+		ExpiresIn:     10000,
+	}
+	defer localAuth.CleanUserTokenCache(cc.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	token, _, err := localAuth.GenerateToken(redisClaims)
+	if err != nil {
+		t.Fatalf("get user tokens by claims generate token %v \n", err)
+	}
+
+	if token == "" {
+		t.Fatal("get user tokens by claims generate token is empty \n")
+	}
+
+	token3232, _, err := localAuth.GenerateToken(cc)
+	if err != nil {
+		t.Fatalf("get user tokens by claims generate token %v \n", err)
+	}
+
+	if token3232 == "" {
+		t.Fatal("get user tokens by claims generate token is empty \n")
+	}
+
+	t.Run("test get user tokens by claims", func(t *testing.T) {
+		tokens, err := localAuth.getUserTokens(redisClaims.ID)
+		if err != nil {
+			t.Fatalf("get user tokens by claims %v", err)
+		}
+
+		if len(tokens) != 2 {
+			t.Fatalf("get user tokens by claims want len 2 but get %d", len(tokens))
+		}
+	})
+}
+
+func TestLocalGetTokenByClaims(t *testing.T) {
+	cc := &CustomClaims{
+		ID:            "3232",
+		Username:      "username",
+		TenancyId:     1,
+		TenancyName:   "username",
+		AuthorityId:   "999",
+		AuthorityType: AdminAuthority,
+		LoginType:     LoginTypeWeb,
+		AuthType:      AuthPwd,
+		CreationDate:  10000,
+		ExpiresIn:     10000,
+	}
+	defer localAuth.CleanUserTokenCache(cc.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	token, _, err := localAuth.GenerateToken(redisClaims)
+	if err != nil {
+		t.Fatalf("get token by claims generate token %v \n", err)
+	}
+
+	if token == "" {
+		t.Fatal("get token by claims generate token is empty \n")
+	}
+
+	token3232, _, err := localAuth.GenerateToken(cc)
+	if err != nil {
+		t.Fatalf("get token by claims generate token %v \n", err)
+	}
+
+	if token3232 == "" {
+		t.Fatal("get token by claims generate token is empty \n")
+	}
+
+	t.Run("test get token by claims", func(t *testing.T) {
+		userToken, err := localAuth.GetTokenByClaims(redisClaims)
+		if err != nil {
+			t.Fatalf("get token by claims %v", err)
+		}
+
+		if token != userToken {
+			t.Errorf("get token by claims token want %s but get %s", token, userToken)
+		}
+		if token == token3232 {
+			t.Errorf("get token by claims token not want %s but get %s", token3232, token)
+		}
+	})
+
+}
+func TestLocalGetCustomClaimses(t *testing.T) {
+	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		redisClaims.LoginType = i
+		go func(i int) {
+			localAuth.GenerateToken(redisClaims)
+			wg.Done()
+		}(i)
+		wg.Wait()
+	}
+	userTokens, err := localAuth.getUserTokens(redisClaims.ID)
+	if err != nil {
+		t.Fatal("get custom claimses generate token is empty \n")
+	}
+	t.Run("test get custom claimses", func(t *testing.T) {
+		clas, err := localAuth.getCustomClaimses(userTokens)
+		if err != nil {
+			t.Fatalf("get custom claimses %v", err)
+		}
+
+		if len(userTokens) != 2 {
+			t.Fatalf("get custom claimses want len 2 but get %d", len(userTokens))
+		}
+		if len(clas) != 2 {
+			t.Fatalf("get custom claimses want len 2 but get %d", len(clas))
+		}
+	})
+
 }
