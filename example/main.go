@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
@@ -17,19 +15,19 @@ import (
 func init() {
 	options := &redis.UniversalOptions{
 		Addrs:       []string{"127.0.0.1:6379"},
-		Password:    "Chindeo",
-		PoolSize:    10, // 设置太低的时候，请求频繁会导致异常掉线
+		Password:    "",
+		PoolSize:    10,
 		IdleTimeout: 300 * time.Second,
-		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			conn, err := net.Dial(network, addr)
-			if err == nil {
-				go func() {
-					time.Sleep(5 * time.Second)
-					conn.Close()
-				}()
-			}
-			return conn, err
-		},
+		// Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
+		// 	conn, err := net.Dial(network, addr)
+		// 	if err == nil {
+		// 		go func() {
+		// 			time.Sleep(5 * time.Second)
+		// 			conn.Close()
+		// 		}()
+		// 	}
+		// 	return conn, err
+		// },
 	}
 
 	err := multi.InitDriver(&multi.Config{
