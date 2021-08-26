@@ -22,7 +22,7 @@ var (
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	userKey = GtSessionUserPrefix + customClaims.ID
+	userKey = getUserPrefixKey(customClaims.AuthorityType, customClaims.ID)
 )
 
 func TestNewLocalAuth(t *testing.T) {
@@ -200,10 +200,10 @@ func TestIsUserTokenOver(t *testing.T) {
 		localAuth.GenerateToken(cc)
 	}
 	t.Run("test is user token over", func(t *testing.T) {
-		if localAuth.isUserTokenOver(cc.ID) {
+		if localAuth.isUserTokenOver(cc.AuthorityType, cc.ID) {
 			t.Error("user token want not over  but get over")
 		}
-		count := localAuth.getUserTokenCount(cc.ID)
+		count := localAuth.getUserTokenCount(cc.AuthorityType, cc.ID)
 		if count != 6 {
 			t.Errorf("user token count want %v  but get %v", 6, count)
 		}
@@ -222,7 +222,7 @@ func TestSetUserTokenMaxCount(t *testing.T) {
 		if count != 5 {
 			t.Errorf("user token max count want %v  but get %v", 5, count)
 		}
-		if !localAuth.isUserTokenOver(customClaims.ID) {
+		if !localAuth.isUserTokenOver(customClaims.AuthorityType, customClaims.ID) {
 			t.Error("user token want over but get not over")
 		}
 	})
@@ -232,17 +232,17 @@ func TestCleanUserTokenCache(t *testing.T) {
 		localAuth.GenerateToken(customClaims)
 	}
 	t.Run("test clean user token cache", func(t *testing.T) {
-		if err := localAuth.CleanUserTokenCache(customClaims.ID); err != nil {
+		if err := localAuth.CleanUserTokenCache(customClaims.AuthorityType, customClaims.ID); err != nil {
 			t.Fatalf("clear user token cache %v", err)
 		}
-		if localAuth.getUserTokenCount(customClaims.ID) != 0 {
+		if localAuth.getUserTokenCount(customClaims.AuthorityType, customClaims.ID) != 0 {
 			t.Error("user token count want 0 but get not 0")
 		}
 	})
 }
 
 func TestLocalGetCustomClaims(t *testing.T) {
-	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	var token string
 	redisClaims.LoginType = 3
 	token, _, err := localAuth.GenerateToken(redisClaims)
@@ -285,8 +285,8 @@ func TestLocalGetUserTokens(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer localAuth.CleanUserTokenCache(cc.ID)
-	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	defer localAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := localAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get user tokens by claims generate token %v \n", err)
@@ -306,7 +306,7 @@ func TestLocalGetUserTokens(t *testing.T) {
 	}
 
 	t.Run("test get user tokens by claims", func(t *testing.T) {
-		tokens, err := localAuth.getUserTokens(redisClaims.ID)
+		tokens, err := localAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
 		if err != nil {
 			t.Fatalf("get user tokens by claims %v", err)
 		}
@@ -330,8 +330,8 @@ func TestLocalGetTokenByClaims(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer localAuth.CleanUserTokenCache(cc.ID)
-	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	defer localAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := localAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get token by claims generate token %v \n", err)
@@ -366,7 +366,7 @@ func TestLocalGetTokenByClaims(t *testing.T) {
 
 }
 func TestLocalGetCustomClaimses(t *testing.T) {
-	defer localAuth.CleanUserTokenCache(redisClaims.ID)
+	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		redisClaims.LoginType = i
@@ -376,7 +376,7 @@ func TestLocalGetCustomClaimses(t *testing.T) {
 		}(i)
 		wg.Wait()
 	}
-	userTokens, err := localAuth.getUserTokens(redisClaims.ID)
+	userTokens, err := localAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
 	if err != nil {
 		t.Fatal("get custom claimses generate token is empty \n")
 	}

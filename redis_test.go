@@ -46,11 +46,11 @@ var (
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	ruserKey = GtSessionUserPrefix + redisClaims.ID
+	ruserKey = getUserPrefixKey(redisClaims.AuthorityType, redisClaims.ID)
 )
 
 func TestRedisGenerateToken(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	t.Run("test generate token", func(t *testing.T) {
 		token, expiresIn, err := redisAuth.GenerateToken(redisClaims)
 		if err != nil {
@@ -178,7 +178,7 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer redisAuth.CleanUserTokenCache(cc.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	t.Run("test del user token token", func(t *testing.T) {
 		token, _, _ := redisAuth.GenerateToken(cc)
 		if token == "" {
@@ -220,7 +220,7 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer redisAuth.CleanUserTokenCache(cc.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
 	}
@@ -234,14 +234,14 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		wg.Wait()
 	}
 	t.Run("test redis is user token over", func(t *testing.T) {
-		isOver, err := redisAuth.isUserTokenOver(cc.ID)
+		isOver, err := redisAuth.isUserTokenOver(cc.AuthorityType, cc.ID)
 		if err != nil {
 			t.Fatalf("is user token over get %v", err)
 		}
 		if isOver {
 			t.Error("user token want not over  but get over")
 		}
-		count, err := redisAuth.getUserTokenCount(cc.ID)
+		count, err := redisAuth.getUserTokenCount(cc.AuthorityType, cc.ID)
 		if err != nil {
 			t.Fatalf("user token count get %v", err)
 		}
@@ -252,7 +252,7 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 }
 
 func TestRedisSetUserTokenMaxCount(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
 	}
@@ -273,7 +273,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 		if count != 3 {
 			t.Errorf("user token max count want %v  but get %v", 3, count)
 		}
-		isOver, err := redisAuth.isUserTokenOver(redisClaims.ID)
+		isOver, err := redisAuth.isUserTokenOver(redisClaims.AuthorityType, redisClaims.ID)
 		if err != nil {
 			t.Fatalf("is user token over get %v", err)
 		}
@@ -283,7 +283,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 	})
 }
 func TestRedisCleanUserTokenCache(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
 		redisClaims.LoginType = i
@@ -294,10 +294,10 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 		wg.Wait()
 	}
 	t.Run("test del user token", func(t *testing.T) {
-		if err := redisAuth.CleanUserTokenCache(redisClaims.ID); err != nil {
+		if err := redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID); err != nil {
 			t.Fatalf("clear user token cache %v", err)
 		}
-		count, err := redisAuth.getUserTokenCount(redisClaims.ID)
+		count, err := redisAuth.getUserTokenCount(redisClaims.AuthorityType, redisClaims.ID)
 		if err != nil {
 			t.Fatalf("user token count get %v", err)
 		}
@@ -308,7 +308,7 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 }
 
 func TestRedisGetCustomClaims(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	var token string
 	redisClaims.LoginType = 3
 	token, _, err := redisAuth.GenerateToken(redisClaims)
@@ -351,8 +351,8 @@ func TestRedisGetUserTokens(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer redisAuth.CleanUserTokenCache(cc.ID)
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get user tokens by claims generate token %v \n", err)
@@ -372,7 +372,7 @@ func TestRedisGetUserTokens(t *testing.T) {
 	}
 
 	t.Run("test get user tokens by claims", func(t *testing.T) {
-		tokens, err := redisAuth.getUserTokens(redisClaims.ID)
+		tokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
 		if err != nil {
 			t.Fatalf("get user tokens by claims %v", err)
 		}
@@ -396,8 +396,8 @@ func TestRedisGetTokenByClaims(t *testing.T) {
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	defer redisAuth.CleanUserTokenCache(cc.ID)
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get token by claims generate token %v \n", err)
@@ -432,7 +432,7 @@ func TestRedisGetTokenByClaims(t *testing.T) {
 
 }
 func TestRedisGetCustomClaimses(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		redisClaims.LoginType = i
@@ -442,7 +442,7 @@ func TestRedisGetCustomClaimses(t *testing.T) {
 		}(i)
 		wg.Wait()
 	}
-	userTokens, err := redisAuth.getUserTokens(redisClaims.ID)
+	userTokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
 	if err != nil {
 		t.Fatal("get custom claimses generate token is empty \n")
 	}

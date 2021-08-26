@@ -2,6 +2,7 @@ package multi
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -144,13 +145,13 @@ func InitDriver(c *Config) error {
 
 // Authentication  认证
 type Authentication interface {
-	GenerateToken(claims *CustomClaims) (string, int64, error) // 生成 token
-	DelUserTokenCache(token string) error                      // 清除用户当前token信息
-	UpdateUserTokenCacheExpire(token string) error             // 更新token 过期时间
-	GetCustomClaims(token string) (*CustomClaims, error)       // 获取token用户信息
-	GetTokenByClaims(claims *CustomClaims) (string, error)     // 通过用户信息获取token
-	CleanUserTokenCache(userId string) error                   // 清除用户所有 token
-	SetUserTokenMaxCount(tokenMaxCount int64) error            // 设置最大登录限制
+	GenerateToken(claims *CustomClaims) (string, int64, error)  // 生成 token
+	DelUserTokenCache(token string) error                       // 清除用户当前token信息
+	UpdateUserTokenCacheExpire(token string) error              // 更新token 过期时间
+	GetCustomClaims(token string) (*CustomClaims, error)        // 获取token用户信息
+	GetTokenByClaims(claims *CustomClaims) (string, error)      // 通过用户信息获取token
+	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
+	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
 	IsAdmin(token string) (bool, error)
 	IsTenancy(token string) (bool, error)
 	IsGeneral(token string) (bool, error)
@@ -171,4 +172,8 @@ func getTokenExpire(loginType int) time.Duration {
 	default:
 		return RedisSessionTimeoutWeb
 	}
+}
+
+func getUserPrefixKey(authorityType int, id string) string {
+	return fmt.Sprintf("%s%d_%s", GtSessionUserPrefix, authorityType, id)
 }
