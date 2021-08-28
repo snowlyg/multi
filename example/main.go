@@ -1,9 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"net"
+	"net/http"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -14,24 +13,26 @@ import (
 // init 初始化认证驱动
 // 驱动类型： 可选 redis ,local
 func init() {
+	options := &redis.UniversalOptions{
+		Addrs:       []string{"127.0.0.1:6379"},
+		Password:    "", 
+		PoolSize:    10,
+		IdleTimeout: 300 * time.Second,
+		// Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
+		// 	conn, err := net.Dial(network, addr)
+		// 	if err == nil {
+		// 		go func() {
+		// 			time.Sleep(5 * time.Second)
+		// 			conn.Close()
+		// 		}()
+		// 	}
+		// 	return conn, err
+		// },
+	}
+
 	err := multi.InitDriver(&multi.Config{
-		DriverType: "redis",
-		UniversalOptions: &redis.UniversalOptions{
-			Addrs:       []string{"127.0.0.1:6379"},
-			Password:    "snowlyg",
-			PoolSize:    10,
-			IdleTimeout: 300 * time.Second,
-			Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				conn, err := net.Dial(network, addr)
-				if err == nil {
-					go func() {
-						time.Sleep(5 * time.Second)
-						conn.Close()
-					}()
-				}
-				return conn, err
-			},
-		}})
+		DriverType:      "redis",
+		UniversalClient: redis.NewUniversalClient(options)})
 	if err != nil {
 		panic(fmt.Sprintf("auth is not init get err %v\n", err))
 	}
@@ -81,7 +82,7 @@ func generateToken() iris.Handler {
 
 		token, _, err := multi.AuthDriver.GenerateToken(claims)
 		if err != nil {
-			ctx.StopWithStatus(iris.StatusInternalServerError)
+			ctx.StopWithStatus(http.StatusInternalServerError)
 			return
 		}
 

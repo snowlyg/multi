@@ -5,11 +5,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/chindeo/pkg/file"
 	"github.com/kataras/iris/v12/context"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -42,13 +44,13 @@ func GetAuthorityId(ctx *context.Context) string {
 }
 
 // GetUserId 用户id
-func GetUserId(ctx *context.Context) int {
+func GetUserId(ctx *context.Context) uint {
 	if v := Get(ctx); v != nil {
 		id, err := strconv.Atoi(v.ID)
 		if err != nil {
 			return 0
 		}
-		return id
+		return uint(id)
 	}
 	return 0
 }
@@ -62,7 +64,7 @@ func GetUsername(ctx *context.Context) string {
 }
 
 // GetTenancyId 商户id
-func GetTenancyId(ctx *context.Context) int {
+func GetTenancyId(ctx *context.Context) uint {
 	if v := Get(ctx); v != nil {
 		return v.TenancyId
 	}
@@ -145,7 +147,7 @@ func NewVerifier(validators ...TokenValidator) *Verifier {
 	return &Verifier{
 		Extractors: []TokenExtractor{FromHeader, FromQuery},
 		ErrorHandler: func(ctx *context.Context, err error) {
-			ctx.StopWithError(401, context.PrivateError(err))
+			ctx.StopWithError(http.StatusUnauthorized, err)
 		},
 		Validators: validators,
 	}
@@ -192,12 +194,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 
 	rcc, err := AuthDriver.GetCustomClaims(string(token))
 	if err != nil {
-		AuthDriver.DelUserTokenCache(string(token))
 		return nil, nil, err
-	}
-
-	if rcc == nil || rcc.ID == "" {
-		return nil, nil, errors.New("mutil: invalid token")
 	}
 
 	return token, rcc, nil
@@ -208,10 +205,12 @@ func GetToken() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("mutil: create token %w", err)
 	}
-	now := Base64Encode([]byte(time.Now().Local().Format(time.RFC3339)))
-	nodeId := Base64Encode(node.Generate().Bytes())
-	token := joinParts(nodeId, now)
-	return string(token), nil
+
+	// 混入两个时间，防止并发token重复
+	nodeBytes, _ := file.Md5Byte(Base64Encode(node.Generate().Bytes()))
+	uuidBytes, _ := file.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeBytes))))
+	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
+	return string(Base64Encode([]byte(token))), nil
 }
 
 func (v *Verifier) Verify(validators ...TokenValidator) context.Handler {

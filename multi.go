@@ -1,18 +1,12 @@
 package multi
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"time"
-
-	iriscontext "github.com/kataras/iris/v12/context"
 
 	"github.com/go-redis/redis/v8"
 )
-
-func init() {
-	iriscontext.SetHandlerName("iris/middleware/multi.*", "iris.multi")
-}
 
 const (
 	GtSessionTokenPrefix        = "GST:"           // token 缓存前缀
@@ -22,9 +16,12 @@ const (
 )
 
 var (
-	ctx                                = context.Background()
-	ErrTokenInvalid                    = errors.New("token is invalid")
 	GtSessionUserMaxTokenDefault int64 = 10
+)
+var (
+	ErrTokenInvalid      = errors.New("token 不可用！")
+	ErrEmptyToken        = errors.New("token 为空！")
+	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限！")
 )
 
 const (
@@ -45,12 +42,14 @@ const (
 	LoginTypeWeb int = iota
 	LoginTypeApp
 	LoginTypeWx
+	LoginTypeDevice
 )
 
 var (
-	RedisSessionTimeoutWeb = 30 * time.Minute
-	RedisSessionTimeoutApp = 24 * time.Hour
-	RedisSessionTimeoutWx  = 5 * 52 * 168 * time.Hour
+	RedisSessionTimeoutWeb    = 4 * time.Hour            // 4 小时
+	RedisSessionTimeoutApp    = 7 * 24 * time.Hour       // 7 天
+	RedisSessionTimeoutWx     = 5 * 52 * 168 * time.Hour // 1年
+	RedisSessionTimeoutDevice = 5 * 52 * 168 * time.Hour // 1年
 )
 
 // Custom claims structure
@@ -67,7 +66,7 @@ var (
 type CustomClaims struct {
 	ID            string `json:"id" redis:"id"`
 	Username      string `json:"username" redis:"username"`
-	TenancyId     int    `json:"tenancy_id" redis:"tenancy_id"`
+	TenancyId     uint   `json:"tenancy_id" redis:"tenancy_id"`
 	TenancyName   string `json:"tenancy_name" redis:"tenancy_name"`
 	AuthorityId   string `json:"authority_id" redis:"authority_id"`
 	AuthorityType int    `json:"authority_type" redis:"authority_type"`
@@ -78,8 +77,9 @@ type CustomClaims struct {
 }
 
 type Config struct {
-	DriverType       string
-	UniversalOptions *redis.UniversalOptions
+	DriverType      string
+	TokenMaxCount   int64
+	UniversalClient redis.UniversalClient
 }
 
 type VerifiedToken struct {
@@ -121,9 +121,12 @@ var AuthDriver Authentication
 // redis 需要设置redis
 // local 使用本地内存
 func InitDriver(c *Config) error {
+	if c.TokenMaxCount == 0 {
+		c.TokenMaxCount = 10
+	}
 	switch c.DriverType {
 	case "redis":
-		driver, err := NewRedisAuth(c.UniversalOptions)
+		driver, err := NewRedisAuth(c.UniversalClient)
 		if err != nil {
 			return err
 		}
@@ -133,23 +136,44 @@ func InitDriver(c *Config) error {
 	default:
 		AuthDriver = NewLocalAuth()
 	}
+	err := AuthDriver.SetUserTokenMaxCount(c.TokenMaxCount)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // Authentication  认证
 type Authentication interface {
-	GenerateToken(claims *CustomClaims) (string, int64, error)
-	ToCache(token string, rcc *CustomClaims) error
-	SyncUserTokenCache(token string) error
-	DelUserTokenCache(token string) error
-	UserTokenExpired(token string) error
-	UpdateUserTokenCacheExpire(token string) error
-	GetCustomClaims(token string) (*CustomClaims, error)
-	GetAuthId(token string) (uint, error)
+	GenerateToken(claims *CustomClaims) (string, int64, error)  // 生成 token
+	DelUserTokenCache(token string) error                       // 清除用户当前token信息
+	UpdateUserTokenCacheExpire(token string) error              // 更新token 过期时间
+	GetCustomClaims(token string) (*CustomClaims, error)        // 获取token用户信息
+	GetTokenByClaims(claims *CustomClaims) (string, error)      // 通过用户信息获取token
+	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
+	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
 	IsAdmin(token string) (bool, error)
 	IsTenancy(token string) (bool, error)
 	IsGeneral(token string) (bool, error)
-	IsUserTokenOver(userId string) bool
-	CleanUserTokenCache(userId string) error
 	Close()
+}
+
+// getTokenExpire 过期时间
+func getTokenExpire(loginType int) time.Duration {
+	switch loginType {
+	case LoginTypeWeb:
+		return RedisSessionTimeoutWeb
+	case LoginTypeWx:
+		return RedisSessionTimeoutWx
+	case LoginTypeApp:
+		return RedisSessionTimeoutApp
+	case LoginTypeDevice:
+		return RedisSessionTimeoutDevice
+	default:
+		return RedisSessionTimeoutWeb
+	}
+}
+
+func getUserPrefixKey(authorityType int, id string) string {
+	return fmt.Sprintf("%s%d_%s", GtSessionUserPrefix, authorityType, id)
 }
