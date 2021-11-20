@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/kataras/iris/v12"
-	"github.com/snowlyg/multi"
+	"github.com/snowlyg/multi/gin"
 )
 
 // init 初始化认证驱动
