@@ -3,9 +3,9 @@ module github.com/snowlyg/multi
 go 1.16
 
 require (
+	github.com/Joker/hpp v1.0.0 // indirect
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/chindeo/pkg v0.0.2-0.20210813090029-854fe1390d17
-	github.com/gin-gonic/gin v1.7.2
 	github.com/go-redis/redis/v8 v8.8.2
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
