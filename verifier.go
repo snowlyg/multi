@@ -9,9 +9,9 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/chindeo/pkg/file"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
+	"github.com/snowlyg/helper/dir"
 )
 
 const (
@@ -207,8 +207,8 @@ func GetToken() (string, error) {
 	}
 
 	// 混入两个时间，防止并发token重复
-	nodeBytes, _ := file.Md5Byte(Base64Encode(node.Generate().Bytes()))
-	uuidBytes, _ := file.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeBytes))))
+	nodeBytes, _ := dir.Md5Byte(Base64Encode(node.Generate().Bytes()))
+	uuidBytes, _ := dir.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeBytes))))
 	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
 	return string(Base64Encode([]byte(token))), nil
 }
