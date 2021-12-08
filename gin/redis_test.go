@@ -2,6 +2,7 @@ package multi
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"net"
@@ -12,12 +13,15 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+//go:embed redis_password.txt
+var password string
+
 var (
 	wg      sync.WaitGroup
 	options = &redis.UniversalOptions{
 		DB:          1,
 		Addrs:       []string{"127.0.0.1:6379"},
-		Password:    "Chindeo",
+		Password:    password, //
 		PoolSize:    10,
 		IdleTimeout: 300 * time.Second,
 		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {

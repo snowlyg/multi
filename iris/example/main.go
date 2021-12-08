@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"github.com/snowlyg/multi"
+	"github.com/kataras/iris/v12"
+	multi "github.com/snowlyg/multi/iris"
 )
 
 // init 初始化认证驱动
@@ -38,35 +38,35 @@ func init() {
 	}
 }
 
-func auth() gin.HandlerFunc {
+func auth() iris.Handler {
 	verifier := multi.NewVerifier()
 	verifier.Extractors = []multi.TokenExtractor{multi.FromHeader} // extract token only from Authorization: Bearer $token
 	return verifier.Verify()
 }
 
 func main() {
-	app := gin.New()
+	app := iris.New()
 
-	app.GET("/", generateToken())
+	app.Get("/", generateToken())
 
-	protectedAPI := app.Group("/protected")
+	protectedAPI := app.Party("/protected")
 	// Register the verify middleware to allow access only to authorized clients.
 	protectedAPI.Use(auth())
 	// ^ or UseRouter(verifyMiddleware) to disallow unauthorized http error handlers too.
 
-	protectedAPI.GET("/", protected)
+	protectedAPI.Get("/", protected)
 	// Invalidate the token through server-side, even if it's not expired yet.
-	protectedAPI.GET("/logout", logout)
+	protectedAPI.Get("/logout", logout)
 
 	// http://localhost:8080
 	// http://localhost:8080/protected (or Authorization: Bearer $token)
 	// http://localhost:8080/protected/logout
 	// http://localhost:8080/protected (401)
-	app.Run(":8080")
+	app.Listen(":8080")
 }
 
-func generateToken() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+func generateToken() iris.Handler {
+	return func(ctx iris.Context) {
 		claims := &multi.CustomClaims{
 			ID:            "1",
 			Username:      "your name",
@@ -82,29 +82,29 @@ func generateToken() gin.HandlerFunc {
 
 		token, _, err := multi.AuthDriver.GenerateToken(claims)
 		if err != nil {
-			ctx.AbortWithStatus(http.StatusInternalServerError)
+			ctx.StopWithStatus(http.StatusInternalServerError)
 			return
 		}
 
-		ctx.String(200, token)
+		ctx.WriteString(token)
 	}
 }
 
-func protected(ctx *gin.Context) {
+func protected(ctx iris.Context) {
 	claims := multi.Get(ctx)
-	ctx.JSON(http.StatusOK, fmt.Sprintf("claims=%+v\n", claims))
+	ctx.Writef("claims=%+v\n", claims)
 }
 
-func logout(ctx *gin.Context) {
+func logout(ctx iris.Context) {
 	token := multi.GetVerifiedToken(ctx)
 	if token == nil {
-		ctx.String(http.StatusOK, "授权凭证为空")
+		ctx.WriteString("授权凭证为空")
 		return
 	}
 	err := multi.AuthDriver.DelUserTokenCache(string(token))
 	if err != nil {
-		ctx.JSON(http.StatusOK, err.Error())
+		ctx.WriteString(err.Error())
 		return
 	}
-	ctx.String(http.StatusOK, "token invalidated, a new token is required to access the protected API")
+	ctx.Writef("token invalidated, a new token is required to access the protected API")
 }
