@@ -3,6 +3,8 @@ package multi
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -76,6 +78,33 @@ type CustomClaims struct {
 	AuthType      int    `json:"auth_type" redis:"auth_type"`
 	CreationDate  int64  `json:"creation_data" redis:"creation_data"`
 	ExpiresIn     int64  `json:"expires_in" redis:"expires_in"`
+}
+
+// Multi
+type Multi struct {
+	Id            uint     `json:"id"`
+	Username      string   `json:"username"`
+	TenancyId     uint     `json:"tenancy_id"`
+	TenancyName   string   `json:"tenancy_name"`
+	AuthorityIds  []string `json:"authority_ids"`
+	AuthorityType int      `json:"authority_type"`
+	LoginType     int      `json:"login_type"`
+	AuthType      int      `json:"auth_type"`
+	ExpiresIn     int64    `json:"expires_in"`
+}
+
+func New(m *Multi) *CustomClaims {
+	claims := &CustomClaims{
+		ID:            strconv.FormatUint(uint64(m.Id), 10),
+		Username:      m.Username,
+		AuthorityId:   strings.Join(m.AuthorityIds, "-"),
+		AuthorityType: m.AuthorityType,
+		LoginType:     m.LoginType,
+		AuthType:      m.AuthType,
+		CreationDate:  time.Now().Local().Unix(),
+		ExpiresIn:     m.ExpiresIn,
+	}
+	return claims
 }
 
 type Config struct {

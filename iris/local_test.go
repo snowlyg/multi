@@ -12,18 +12,19 @@ import (
 var (
 	localAuth    = NewLocalAuth()
 	tToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODQxNg"
-	customClaims = &multi.CustomClaims{
-		ID:            "1",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.LoginTypeWeb,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	customClaims = multi.New(
+		&multi.Multi{
+			Id:            uint(1),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	userKey = multi.GetUserPrefixKey(customClaims.AuthorityType, customClaims.ID)
 )
 
@@ -148,18 +149,19 @@ func TestToCache(t *testing.T) {
 }
 
 func TestDelUserTokenCache(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "2",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.LoginTypeWeb,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(2),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	t.Run("test del user token", func(t *testing.T) {
 		token, _, _ := localAuth.GenerateToken(cc)
 		if token == "" {
@@ -186,18 +188,19 @@ func TestDelUserTokenCache(t *testing.T) {
 }
 
 func TestIsUserTokenOver(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "3",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.LoginTypeWeb,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(3),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	for i := 0; i < 6; i++ {
 		localAuth.GenerateToken(cc)
 	}
@@ -275,18 +278,19 @@ func TestLocalGetCustomClaims(t *testing.T) {
 }
 
 func TestLocalGetUserTokens(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "121321",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeDevice,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(121321),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer localAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := localAuth.GenerateToken(redisClaims)
@@ -320,18 +324,19 @@ func TestLocalGetUserTokens(t *testing.T) {
 }
 
 func TestLocalGetTokenByClaims(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "3232",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(3232),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer localAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	defer localAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := localAuth.GenerateToken(redisClaims)

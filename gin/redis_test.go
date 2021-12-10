@@ -39,18 +39,19 @@ var (
 
 	redisAuth, _ = NewRedisAuth(redis.NewUniversalClient(options))
 	rToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
-	redisClaims  = &multi.CustomClaims{
-		ID:            "121322",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	redisClaims  = multi.New(
+		&multi.Multi{
+			Id:            uint(121322),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	ruserKey = multi.GetUserPrefixKey(redisClaims.AuthorityType, redisClaims.ID)
 )
 
@@ -171,18 +172,19 @@ func TestRedisToCache(t *testing.T) {
 }
 
 func TestRedisDelUserTokenCache(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "221",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(2111),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	t.Run("test del user token token", func(t *testing.T) {
 		token, _, _ := redisAuth.GenerateToken(cc)
@@ -213,18 +215,19 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 }
 
 func TestRedisIsUserTokenOver(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "3232",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(3232),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
@@ -344,18 +347,19 @@ func TestRedisGetCustomClaims(t *testing.T) {
 }
 
 func TestRedisGetUserTokens(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "121322",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeDevice,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(121322),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
@@ -389,18 +393,19 @@ func TestRedisGetUserTokens(t *testing.T) {
 }
 
 func TestRedisGetTokenByClaims(t *testing.T) {
-	cc := &multi.CustomClaims{
-		ID:            "3232",
-		Username:      "username",
-		TenancyId:     1,
-		TenancyName:   "username",
-		AuthorityId:   "999",
-		AuthorityType: multi.AdminAuthority,
-		LoginType:     multi.LoginTypeWeb,
-		AuthType:      multi.AuthPwd,
-		CreationDate:  10000,
-		ExpiresIn:     10000,
-	}
+	cc := multi.New(
+		&multi.Multi{
+			Id:            uint(3232),
+			Username:      "username",
+			TenancyId:     1,
+			TenancyName:   "username",
+			AuthorityIds:  []string{"999"},
+			AuthorityType: multi.AdminAuthority,
+			LoginType:     multi.LoginTypeWeb,
+			AuthType:      multi.LoginTypeWeb,
+			ExpiresIn:     10000,
+		},
+	)
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
