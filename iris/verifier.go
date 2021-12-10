@@ -1,4 +1,4 @@
-package multi
+package iris
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"github.com/kataras/iris/v12/context"
 	uuid "github.com/satori/go.uuid"
 	"github.com/snowlyg/helper/dir"
+	"github.com/snowlyg/multi"
 )
 
 const (
@@ -21,8 +22,8 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *context.Context) *CustomClaims {
-	if v := ctx.Values().Get(claimsContextKey).(*CustomClaims); v != nil {
+func Get(ctx *context.Context) *multi.CustomClaims {
+	if v := ctx.Values().Get(claimsContextKey).(*multi.CustomClaims); v != nil {
 		return v
 	}
 	return nil
@@ -39,7 +40,7 @@ func GetAuthorityType(ctx *context.Context) int {
 // GetAuthorityId 角色id
 func GetAuthorityId(ctx *context.Context) []string {
 	if v := Get(ctx); v != nil {
-		return strings.Split(v.AuthorityId, AuthorityTypeSplit)
+		return strings.Split(v.AuthorityId, multi.AuthorityTypeSplit)
 	}
 	return nil
 }
@@ -107,7 +108,7 @@ func GetVerifiedToken(ctx *context.Context) []byte {
 
 func IsTenancy(ctx *context.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := AuthDriver.IsTenancy(string(v))
+		b, err := multi.AuthDriver.IsTenancy(string(v))
 		if err != nil {
 			return false
 		}
@@ -118,7 +119,7 @@ func IsTenancy(ctx *context.Context) bool {
 
 func IsGeneral(ctx *context.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := AuthDriver.IsGeneral(string(v))
+		b, err := multi.AuthDriver.IsGeneral(string(v))
 		if err != nil {
 			return false
 		}
@@ -129,7 +130,7 @@ func IsGeneral(ctx *context.Context) bool {
 
 func IsAdmin(ctx *context.Context) bool {
 	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := AuthDriver.IsAdmin(string(v))
+		b, err := multi.AuthDriver.IsAdmin(string(v))
 		if err != nil {
 			return false
 		}
@@ -140,11 +141,11 @@ func IsAdmin(ctx *context.Context) bool {
 
 type Verifier struct {
 	Extractors   []TokenExtractor
-	Validators   []TokenValidator
+	Validators   []multi.TokenValidator
 	ErrorHandler func(ctx *context.Context, err error)
 }
 
-func NewVerifier(validators ...TokenValidator) *Verifier {
+func NewVerifier(validators ...multi.TokenValidator) *Verifier {
 	return &Verifier{
 		Extractors: []TokenExtractor{FromHeader, FromQuery},
 		ErrorHandler: func(ctx *context.Context, err error) {
@@ -175,7 +176,7 @@ func (v *Verifier) RequestToken(ctx *context.Context) (token string) {
 	return
 }
 
-func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]byte, *CustomClaims, error) {
+func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.CustomClaims, error) {
 	if len(token) == 0 {
 		return nil, nil, errors.New("mutil: token is empty")
 	}
@@ -193,7 +194,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]by
 		return nil, nil, err
 	}
 
-	rcc, err := AuthDriver.GetCustomClaims(string(token))
+	rcc, err := multi.AuthDriver.GetCustomClaims(string(token))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -214,7 +215,7 @@ func GetToken() (string, error) {
 	return string(Base64Encode([]byte(token))), nil
 }
 
-func (v *Verifier) Verify(validators ...TokenValidator) context.Handler {
+func (v *Verifier) Verify(validators ...multi.TokenValidator) context.Handler {
 	return func(ctx *context.Context) {
 		token := []byte(v.RequestToken(ctx))
 		verifiedToken, rcc, err := v.VerifyToken(token, validators...)

@@ -1,28 +1,30 @@
-package multi
+package gin
 
 import (
 	"errors"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/snowlyg/multi"
 )
 
 var (
 	localAuth    = NewLocalAuth()
 	tToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODQxNg"
-	customClaims = &CustomClaims{
+	customClaims = &multi.CustomClaims{
 		ID:            "1",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      LoginTypeWeb,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.LoginTypeWeb,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	userKey = getUserPrefixKey(customClaims.AuthorityType, customClaims.ID)
+	userKey = multi.GetUserPrefixKey(customClaims.AuthorityType, customClaims.ID)
 )
 
 func TestNewLocalAuth(t *testing.T) {
@@ -90,7 +92,7 @@ func TestGenerateToken(t *testing.T) {
 		} else {
 			t.Error("user prefix value is emptpy")
 		}
-		bindKey := GtSessionBindUserPrefix + token
+		bindKey := multi.GtSessionBindUserPrefix + token
 		if uTokens, uFound := localAuth.Cache.Get(bindKey); uFound {
 			if uTokens != userKey {
 				t.Errorf("bind user prefix value want %v but get %v", userKey, uTokens)
@@ -146,15 +148,15 @@ func TestToCache(t *testing.T) {
 }
 
 func TestDelUserTokenCache(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "2",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      LoginTypeWeb,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.LoginTypeWeb,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -169,14 +171,14 @@ func TestDelUserTokenCache(t *testing.T) {
 			t.Fatalf("del user token cache  %v", err)
 		}
 		_, err = localAuth.GetCustomClaims(token)
-		if !errors.Is(err, ErrTokenInvalid) {
-			t.Fatalf("get custom claims err want %v but get  %v", ErrTokenInvalid, err)
+		if !errors.Is(err, multi.ErrTokenInvalid) {
+			t.Fatalf("get custom claims err want %v but get  %v", multi.ErrTokenInvalid, err)
 		}
 
-		if uTokens, uFound := localAuth.Cache.Get(GtSessionUserPrefix + cc.ID); uFound && uTokens != nil {
+		if uTokens, uFound := localAuth.Cache.Get(multi.GtSessionUserPrefix + cc.ID); uFound && uTokens != nil {
 			t.Errorf("user prefix value want empty but get %v", uTokens)
 		}
-		bindKey := GtSessionBindUserPrefix + token
+		bindKey := multi.GtSessionBindUserPrefix + token
 		if key, uFound := localAuth.Cache.Get(bindKey); uFound {
 			t.Errorf("bind user prefix value want empty but get %v", key)
 		}
@@ -184,15 +186,15 @@ func TestDelUserTokenCache(t *testing.T) {
 }
 
 func TestIsUserTokenOver(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "3",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      LoginTypeWeb,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.LoginTypeWeb,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -273,15 +275,15 @@ func TestLocalGetCustomClaims(t *testing.T) {
 }
 
 func TestLocalGetUserTokens(t *testing.T) {
-	cc := &CustomClaims{
-		ID:            "121321",
+	cc := &multi.CustomClaims{
+		ID:            "121322",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeDevice,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeDevice,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -318,15 +320,15 @@ func TestLocalGetUserTokens(t *testing.T) {
 }
 
 func TestLocalGetTokenByClaims(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "3232",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}

@@ -1,4 +1,4 @@
-package multi
+package iris
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/snowlyg/multi"
 )
 
 //go:embed redis_password.txt
@@ -38,19 +39,19 @@ var (
 
 	redisAuth, _ = NewRedisAuth(redis.NewUniversalClient(options))
 	rToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
-	redisClaims  = &CustomClaims{
+	redisClaims  = &multi.CustomClaims{
 		ID:            "121321",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
-	ruserKey = getUserPrefixKey(redisClaims.AuthorityType, redisClaims.ID)
+	ruserKey = multi.GetUserPrefixKey(redisClaims.AuthorityType, redisClaims.ID)
 )
 
 func TestRedisGenerateToken(t *testing.T) {
@@ -112,7 +113,7 @@ func TestRedisGenerateToken(t *testing.T) {
 				t.Errorf("user prefix value want %v but get %v", ruserKey, uTokens)
 			}
 		}
-		bindKey := GtSessionBindUserPrefix + token
+		bindKey := multi.GtSessionBindUserPrefix + token
 		key, err := redisAuth.Client.Get(context.Background(), bindKey).Result()
 		if err != nil {
 			t.Fatal(err)
@@ -125,7 +126,7 @@ func TestRedisGenerateToken(t *testing.T) {
 }
 
 func TestRedisToCache(t *testing.T) {
-	defer redisAuth.Client.Del(context.Background(), GtSessionTokenPrefix+rToken)
+	defer redisAuth.Client.Del(context.Background(), multi.GtSessionTokenPrefix+rToken)
 	t.Run("test generate token", func(t *testing.T) {
 		err := redisAuth.toCache(rToken, redisClaims)
 		if err != nil {
@@ -170,15 +171,15 @@ func TestRedisToCache(t *testing.T) {
 }
 
 func TestRedisDelUserTokenCache(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "221",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -194,16 +195,16 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 			t.Fatalf("del user token cache  %v", err)
 		}
 		_, err = redisAuth.GetCustomClaims(token)
-		if !errors.Is(err, ErrEmptyToken) {
-			t.Fatalf("get custom claims err want '%v' but get  '%v'", ErrEmptyToken, err)
+		if !errors.Is(err, multi.ErrEmptyToken) {
+			t.Fatalf("get custom claims err want '%v' but get  '%v'", multi.ErrEmptyToken, err)
 		}
 
-		if uTokens, err := redisAuth.Client.SMembers(context.Background(), GtSessionUserPrefix+cc.ID).Result(); err != nil {
+		if uTokens, err := redisAuth.Client.SMembers(context.Background(), multi.GtSessionUserPrefix+cc.ID).Result(); err != nil {
 			t.Fatalf("user prefix value wantget %v", err)
 		} else if len(uTokens) != 0 {
 			t.Errorf("user prefix value want empty but get %+v", uTokens)
 		}
-		bindKey := GtSessionBindUserPrefix + token
+		bindKey := multi.GtSessionBindUserPrefix + token
 		key, _ := redisAuth.Client.Get(context.Background(), bindKey).Result()
 		if key != "" {
 			t.Errorf("bind user prefix value want empty but get %v", key)
@@ -212,15 +213,15 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 }
 
 func TestRedisIsUserTokenOver(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "3232",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -343,15 +344,15 @@ func TestRedisGetCustomClaims(t *testing.T) {
 }
 
 func TestRedisGetUserTokens(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "121321",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeDevice,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeDevice,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}
@@ -388,15 +389,15 @@ func TestRedisGetUserTokens(t *testing.T) {
 }
 
 func TestRedisGetTokenByClaims(t *testing.T) {
-	cc := &CustomClaims{
+	cc := &multi.CustomClaims{
 		ID:            "3232",
 		Username:      "username",
 		TenancyId:     1,
 		TenancyName:   "username",
 		AuthorityId:   "999",
-		AuthorityType: AdminAuthority,
-		LoginType:     LoginTypeWeb,
-		AuthType:      AuthPwd,
+		AuthorityType: multi.AdminAuthority,
+		LoginType:     multi.LoginTypeWeb,
+		AuthType:      multi.AuthPwd,
 		CreationDate:  10000,
 		ExpiresIn:     10000,
 	}

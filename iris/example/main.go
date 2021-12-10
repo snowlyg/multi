@@ -7,7 +7,8 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/kataras/iris/v12"
-	multi "github.com/snowlyg/multi/iris"
+	"github.com/snowlyg/multi"
+	multi_iris "github.com/snowlyg/multi/iris"
 )
 
 // init 初始化认证驱动
@@ -30,7 +31,7 @@ func init() {
 		// },
 	}
 
-	err := multi.InitDriver(&multi.Config{
+	err := multi_iris.InitDriver(&multi.Config{
 		DriverType:      "redis",
 		UniversalClient: redis.NewUniversalClient(options)})
 	if err != nil {
@@ -39,8 +40,8 @@ func init() {
 }
 
 func auth() iris.Handler {
-	verifier := multi.NewVerifier()
-	verifier.Extractors = []multi.TokenExtractor{multi.FromHeader} // extract token only from Authorization: Bearer $token
+	verifier := multi_iris.NewVerifier()
+	verifier.Extractors = []multi_iris.TokenExtractor{multi_iris.FromHeader} // extract token only from Authorization: Bearer $token
 	return verifier.Verify()
 }
 
@@ -91,12 +92,12 @@ func generateToken() iris.Handler {
 }
 
 func protected(ctx iris.Context) {
-	claims := multi.Get(ctx)
+	claims := multi_iris.Get(ctx)
 	ctx.Writef("claims=%+v\n", claims)
 }
 
 func logout(ctx iris.Context) {
-	token := multi.GetVerifiedToken(ctx)
+	token := multi_iris.GetVerifiedToken(ctx)
 	if token == nil {
 		ctx.WriteString("授权凭证为空")
 		return
