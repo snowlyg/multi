@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/kataras/iris/v12/context"
@@ -27,7 +28,7 @@ func Get(ctx *context.Context) *CustomClaims {
 	return nil
 }
 
-// GetAuthorityType 角色名
+// GetAuthorityType 角色类型
 func GetAuthorityType(ctx *context.Context) int {
 	if v := Get(ctx); v != nil {
 		return v.AuthorityType
@@ -36,11 +37,11 @@ func GetAuthorityType(ctx *context.Context) int {
 }
 
 // GetAuthorityId 角色id
-func GetAuthorityId(ctx *context.Context) string {
+func GetAuthorityId(ctx *context.Context) []string {
 	if v := Get(ctx); v != nil {
-		return v.AuthorityId
+		return strings.Split(v.AuthorityId, AuthorityTypeSplit)
 	}
-	return ""
+	return nil
 }
 
 // GetUserId 用户id

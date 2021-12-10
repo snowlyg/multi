@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
@@ -15,8 +16,8 @@ import (
 )
 
 const (
-	claimsContextKey        = "iris.multi.claims"
-	verifiedTokenContextKey = "iris.multi.token"
+	claimsContextKey        = "gin.multi.claims"
+	verifiedTokenContextKey = "gin.multi.token"
 )
 
 // Get returns the claims decoded by a verifier.
@@ -29,7 +30,7 @@ func Get(ctx *gin.Context) *CustomClaims {
 	return nil
 }
 
-// GetAuthorityType 角色名
+// GetAuthorityType 角色类型
 func GetAuthorityType(ctx *gin.Context) int {
 	if v := Get(ctx); v != nil {
 		return v.AuthorityType
@@ -38,11 +39,11 @@ func GetAuthorityType(ctx *gin.Context) int {
 }
 
 // GetAuthorityId 角色id
-func GetAuthorityId(ctx *gin.Context) string {
+func GetAuthorityId(ctx *gin.Context) []string {
 	if v := Get(ctx); v != nil {
-		return v.AuthorityId
+		return strings.Split(v.AuthorityId, AuthorityTypeSplit)
 	}
-	return ""
+	return nil
 }
 
 // GetUserId 用户id

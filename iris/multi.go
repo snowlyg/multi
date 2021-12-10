@@ -16,11 +16,13 @@ const (
 )
 
 var (
+	AuthorityTypeSplit                 = "-"
 	GtSessionUserMaxTokenDefault int64 = 10
 )
+
 var (
-	ErrTokenInvalid      = errors.New("token 不可用！")
-	ErrEmptyToken        = errors.New("token 为空！")
+	ErrTokenInvalid      = errors.New("TOKEN不可用！")
+	ErrEmptyToken        = errors.New("TOKEN为空！")
 	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限！")
 )
 
