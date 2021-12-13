@@ -2,10 +2,10 @@ package gin
 
 import (
 	"context"
-	_ "embed"
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -14,8 +14,7 @@ import (
 	"github.com/snowlyg/multi"
 )
 
-//go:embed redis_password.txt
-var password string
+var password = os.Getenv("redisPwd")
 
 var (
 	wg      sync.WaitGroup
