@@ -12,5 +12,5 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/smartystreets/goconvey v1.7.2 // indirect
-	github.com/snowlyg/helper v0.0.0-20211202074034-78d14721c82d
+	github.com/snowlyg/helper v0.0.1
 )
