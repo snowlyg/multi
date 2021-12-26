@@ -1,18 +1,12 @@
 package gin
 
 import (
-	"bytes"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
-	"github.com/snowlyg/helper/dir"
 	"github.com/snowlyg/multi"
 )
 
@@ -22,9 +16,9 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *gin.Context) *multi.CustomClaims {
+func Get(ctx *gin.Context) *multi.MultiClaims {
 	if v, b := ctx.Get(claimsContextKey); b {
-		if tok, ok := v.(*multi.CustomClaims); ok {
+		if tok, ok := v.(*multi.MultiClaims); ok {
 			return tok
 		}
 	}
@@ -50,7 +44,7 @@ func GetAuthorityId(ctx *gin.Context) []string {
 // GetUserId 用户id
 func GetUserId(ctx *gin.Context) uint {
 	if v := Get(ctx); v != nil {
-		id, err := strconv.Atoi(v.ID)
+		id, err := strconv.Atoi(v.Id)
 		if err != nil {
 			return 0
 		}
@@ -94,7 +88,7 @@ func GetCreationDate(ctx *gin.Context) int64 {
 // GetExpiresIn 有效期
 func GetExpiresIn(ctx *gin.Context) int64 {
 	if v := Get(ctx); v != nil {
-		return v.ExpiresIn
+		return v.ExpiresAt
 	}
 	return 0
 }
@@ -176,7 +170,7 @@ func (v *Verifier) RequestToken(ctx *gin.Context) (token string) {
 	return
 }
 
-func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.CustomClaims, error) {
+func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.MultiClaims, error) {
 	if len(token) == 0 {
 		return nil, nil, errors.New("mutil: token is empty")
 	}
@@ -194,25 +188,12 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 		return nil, nil, err
 	}
 
-	rcc, err := multi.AuthDriver.GetCustomClaims(string(token))
+	rcc, err := multi.AuthDriver.GetMultiClaims(string(token))
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return token, rcc, nil
-}
-
-func GetToken() (string, error) {
-	node, err := snowflake.NewNode(1)
-	if err != nil {
-		return "", fmt.Errorf("mutil: create token %w", err)
-	}
-
-	// 混入两个时间，防止并发token重复
-	nodeBytes, _ := dir.Md5Byte(Base64Encode(node.Generate().Bytes()))
-	uuidBytes, _ := dir.Md5Byte(Base64Encode(joinParts(Base64Encode(uuid.NewV4().Bytes()), []byte(nodeBytes))))
-	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
-	return string(Base64Encode([]byte(token))), nil
 }
 
 func (v *Verifier) Verify(validators ...multi.TokenValidator) gin.HandlerFunc {
@@ -229,35 +210,4 @@ func (v *Verifier) Verify(validators ...multi.TokenValidator) gin.HandlerFunc {
 		ctx.Set(verifiedTokenContextKey, verifiedToken)
 		ctx.Next()
 	}
-}
-
-var (
-	sep    = []byte(".")
-	pad    = []byte("=")
-	padStr = string(pad)
-)
-
-func joinParts(parts ...[]byte) []byte {
-	return bytes.Join(parts, sep)
-}
-
-func Base64Encode(src []byte) []byte {
-	buf := make([]byte, base64.URLEncoding.EncodedLen(len(src)))
-	base64.URLEncoding.Encode(buf, src)
-
-	return bytes.TrimRight(buf, padStr) // JWT: no trailing '='.
-}
-
-// Base64Decode decodes "src" to jwt base64 url format.
-// We could use the base64.RawURLEncoding but the below is a bit faster.
-func Base64Decode(src []byte) ([]byte, error) {
-	if n := len(src) % 4; n > 0 {
-		// JWT: Because of no trailing '=' let's suffix it
-		// with the correct number of those '=' before decoding.
-		src = append(src, bytes.Repeat(pad, 4-n)...)
-	}
-
-	buf := make([]byte, base64.URLEncoding.DecodedLen(len(src)))
-	n, err := base64.URLEncoding.Decode(buf, src)
-	return buf[:n], err
 }

@@ -3,8 +3,6 @@ package multi
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -23,9 +21,10 @@ var (
 )
 
 var (
-	ErrTokenInvalid      = errors.New("TOKEN不可用！")
-	ErrEmptyToken        = errors.New("TOKEN为空！")
-	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限！")
+	ErrTokenInvalid      = errors.New("TOKEN不可用")
+	ErrEmptyToken        = errors.New("TOKEN为空")
+	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限")
+	ErrJwtNotSuportThisFunc = errors.New("JWT验证不支持次方法")
 )
 
 const (
@@ -56,67 +55,58 @@ var (
 	RedisSessionTimeoutDevice = 5 * 52 * 168 * time.Hour // 1年
 )
 
-// Custom claims structure
-// ID 用户id
-// Username 用户名
-// TenancyId 商户id
-// TenancyName 商户名称
-// AuthorityId 角色id
-// AuthorityType 角色类型
-// LoginType 登录类型 web,app,wechat
-// AuthType  授权类型 密码,验证码,第三方
-// CreationDate 登录时间
-// ExpiresIn 有效期
-type CustomClaims struct {
-	ID            string `json:"id" redis:"id"`
-	Username      string `json:"username" redis:"username"`
-	TenancyId     uint   `json:"tenancy_id" redis:"tenancy_id"`
-	TenancyName   string `json:"tenancy_name" redis:"tenancy_name"`
-	AuthorityId   string `json:"authority_id" redis:"authority_id"`
-	AuthorityType int    `json:"authority_type" redis:"authority_type"`
-	LoginType     int    `json:"login_type" redis:"login_type"`
-	AuthType      int    `json:"auth_type" redis:"auth_type"`
-	CreationDate  int64  `json:"creation_data" redis:"creation_data"`
-	ExpiresIn     int64  `json:"expires_in" redis:"expires_in"`
+// InitDriver 认证驱动
+// redis 需要设置redis
+// local 使用本地内存
+func InitDriver(c *Config) error {
+	if c.TokenMaxCount == 0 {
+		c.TokenMaxCount = 10
+	}
+	switch c.DriverType {
+	case "redis":
+		driver, err := NewRedisAuth(c.UniversalClient)
+		if err != nil {
+			return err
+		}
+		AuthDriver = driver
+		err = AuthDriver.SetUserTokenMaxCount(c.TokenMaxCount)
+		if err != nil {
+			return err
+		}
+	case "local":
+		AuthDriver = NewLocalAuth()
+		err := AuthDriver.SetUserTokenMaxCount(c.TokenMaxCount)
+		if err != nil {
+			return err
+		}
+	case "jwt":
+		AuthDriver = NewJwtAuth(c.HmacSecret)
+	default:
+		AuthDriver = NewJwtAuth(c.HmacSecret)
+	}
+
+	return nil
 }
 
 // Multi
 type Multi struct {
-	Id            uint     `json:"id"`
-	Username      string   `json:"username"`
-	TenancyId     uint     `json:"tenancy_id"`
-	TenancyName   string   `json:"tenancy_name"`
-	AuthorityIds  []string `json:"authority_ids"`
-	AuthorityType int      `json:"authority_type"`
-	LoginType     int      `json:"login_type"`
-	AuthType      int      `json:"auth_type"`
-	ExpiresIn     int64    `json:"expires_in"`
-}
-
-func New(m *Multi) *CustomClaims {
-	claims := &CustomClaims{
-		ID:            strconv.FormatUint(uint64(m.Id), 10),
-		Username:      m.Username,
-		AuthorityId:   strings.Join(m.AuthorityIds, "-"),
-		AuthorityType: m.AuthorityType,
-		LoginType:     m.LoginType,
-		AuthType:      m.AuthType,
-		CreationDate:  time.Now().Local().Unix(),
-		ExpiresIn:     m.ExpiresIn,
-	}
-	return claims
+	Id            uint     `json:"id,omitempty"`
+	Username      string   `json:"username,omitempty"`
+	TenancyId     uint     `json:"tenancyId,omitempty"`
+	TenancyName   string   `json:"tenancyName,omitempty"`
+	AuthorityIds  []string `json:"authorityIds,omitempty"`
+	AuthorityType int      `json:"authorityType,omitempty"`
+	LoginType     int      `json:"loginType,omitempty"`
+	AuthType      int      `json:"authType,omitempty"`
+	CreationDate  int64    `json:"creationData,omitempty"`
+	ExpiresAt     int64    `json:"expiresAt,omitempty"`
 }
 
 type Config struct {
 	DriverType      string
 	TokenMaxCount   int64
 	UniversalClient redis.UniversalClient
-}
-
-type VerifiedToken struct {
-	Token   []byte // The original token.
-	Header  []byte // The header (decoded) part.
-	Payload []byte // The payload (decoded) part.
+	HmacSecret      []byte
 }
 
 type (
@@ -150,11 +140,11 @@ var AuthDriver Authentication
 
 // Authentication  认证
 type Authentication interface {
-	GenerateToken(claims *CustomClaims) (string, int64, error)  // 生成 token
+	GenerateToken(claims *MultiClaims) (string, int64, error)   // 生成 token
 	DelUserTokenCache(token string) error                       // 清除用户当前token信息
 	UpdateUserTokenCacheExpire(token string) error              // 更新token 过期时间
-	GetCustomClaims(token string) (*CustomClaims, error)        // 获取token用户信息
-	GetTokenByClaims(claims *CustomClaims) (string, error)      // 通过用户信息获取token
+	GetMultiClaims(token string) (*MultiClaims, error)          // 获取token用户信息
+	GetTokenByClaims(claims *MultiClaims) (string, error)       // 通过用户信息获取token
 	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
 	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
 	IsAdmin(token string) (bool, error)

@@ -1,4 +1,4 @@
-package gin
+package multi
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/snowlyg/multi"
 )
 
 var password = os.Getenv("redisPwd")
@@ -38,24 +37,24 @@ var (
 
 	redisAuth, _ = NewRedisAuth(redis.NewUniversalClient(options))
 	rToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
-	redisClaims  = multi.New(
-		&multi.Multi{
-			Id:            uint(121322),
+	redisClaims  = New(
+		&Multi{
+			Id:            uint(121321),
 			Username:      "username",
 			TenancyId:     1,
 			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
-			AuthorityType: multi.AdminAuthority,
-			LoginType:     multi.LoginTypeWeb,
-			AuthType:      multi.LoginTypeWeb,
-			ExpiresIn:     10000,
+			AuthorityType: AdminAuthority,
+			LoginType:     LoginTypeWeb,
+			AuthType:      LoginTypeWeb,
+			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	ruserKey = multi.GetUserPrefixKey(redisClaims.AuthorityType, redisClaims.ID)
+	ruserKey = GetUserPrefixKey(redisClaims.AuthorityType, redisClaims.Id)
 )
 
 func TestRedisGenerateToken(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	t.Run("test generate token", func(t *testing.T) {
 		token, expiresIn, err := redisAuth.GenerateToken(redisClaims)
 		if err != nil {
@@ -67,16 +66,16 @@ func TestRedisGenerateToken(t *testing.T) {
 
 		t.Logf("token:%s\n", token)
 
-		if expiresIn != redisClaims.ExpiresIn {
-			t.Errorf("generate token expires want %v but get %v", redisClaims.ExpiresIn, expiresIn)
+		if expiresIn != redisClaims.ExpiresAt {
+			t.Errorf("generate token expires want %v but get %v", redisClaims.ExpiresAt, expiresIn)
 		}
-		cc, err := redisAuth.GetCustomClaims(token)
+		cc, err := redisAuth.GetMultiClaims(token)
 		if err != nil {
 			t.Fatalf("get custom claims  %v", err)
 		}
 
-		if cc.ID != redisClaims.ID {
-			t.Errorf("get custom id want %v but get %v", redisClaims.ID, cc.ID)
+		if cc.Id != redisClaims.Id {
+			t.Errorf("get custom id want %v but get %v", redisClaims.Id, cc.Id)
 		}
 		if cc.Username != redisClaims.Username {
 			t.Errorf("get custom username want %v but get %v", redisClaims.Username, cc.Username)
@@ -102,8 +101,8 @@ func TestRedisGenerateToken(t *testing.T) {
 		if cc.CreationDate != redisClaims.CreationDate {
 			t.Errorf("get custom creation_data want %v but get %v", redisClaims.CreationDate, cc.CreationDate)
 		}
-		if cc.ExpiresIn != redisClaims.ExpiresIn {
-			t.Errorf("get custom expires_in want %v but get %v", redisClaims.ExpiresIn, cc.ExpiresIn)
+		if cc.ExpiresAt != redisClaims.ExpiresAt {
+			t.Errorf("get custom expires_at want %v but get %v", redisClaims.ExpiresAt, cc.ExpiresAt)
 		}
 
 		if uTokens, err := redisAuth.Client.SMembers(context.Background(), ruserKey).Result(); err != nil {
@@ -113,7 +112,7 @@ func TestRedisGenerateToken(t *testing.T) {
 				t.Errorf("user prefix value want %v but get %v", ruserKey, uTokens)
 			}
 		}
-		bindKey := multi.GtSessionBindUserPrefix + token
+		bindKey := GtSessionBindUserPrefix + token
 		key, err := redisAuth.Client.Get(context.Background(), bindKey).Result()
 		if err != nil {
 			t.Fatal(err)
@@ -126,19 +125,19 @@ func TestRedisGenerateToken(t *testing.T) {
 }
 
 func TestRedisToCache(t *testing.T) {
-	defer redisAuth.Client.Del(context.Background(), multi.GtSessionTokenPrefix+rToken)
+	defer redisAuth.Client.Del(context.Background(), GtSessionTokenPrefix+rToken)
 	t.Run("test generate token", func(t *testing.T) {
 		err := redisAuth.toCache(rToken, redisClaims)
 		if err != nil {
 			t.Fatalf("generate token %v", err)
 		}
-		cc, err := redisAuth.GetCustomClaims(rToken)
+		cc, err := redisAuth.GetMultiClaims(rToken)
 		if err != nil {
 			t.Fatalf("get custom claims  %v", err)
 		}
 
-		if cc.ID != redisClaims.ID {
-			t.Errorf("get custom id want %v but get %v", redisClaims.ID, cc.ID)
+		if cc.Id != redisClaims.Id {
+			t.Errorf("get custom id want %v but get %v", redisClaims.Id, cc.Id)
 		}
 		if cc.Username != redisClaims.Username {
 			t.Errorf("get custom username want %v but get %v", redisClaims.Username, cc.Username)
@@ -164,27 +163,28 @@ func TestRedisToCache(t *testing.T) {
 		if cc.CreationDate != redisClaims.CreationDate {
 			t.Errorf("get custom creation_data want %v but get %v", redisClaims.CreationDate, cc.CreationDate)
 		}
-		if cc.ExpiresIn != redisClaims.ExpiresIn {
-			t.Errorf("get custom expires_in want %v but get %v", redisClaims.ExpiresIn, cc.ExpiresIn)
+		if cc.ExpiresAt != redisClaims.ExpiresAt {
+			t.Errorf("get custom expires_at want %v but get %v", redisClaims.ExpiresAt, cc.ExpiresAt)
 		}
 	})
 }
 
 func TestRedisDelUserTokenCache(t *testing.T) {
-	cc := multi.New(
-		&multi.Multi{
-			Id:            uint(2111),
+	cc := New(
+		&Multi{
+			Id:            uint(221),
 			Username:      "username",
 			TenancyId:     1,
 			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
-			AuthorityType: multi.AdminAuthority,
-			LoginType:     multi.LoginTypeWeb,
-			AuthType:      multi.LoginTypeWeb,
-			ExpiresIn:     10000,
+			AuthorityType: AdminAuthority,
+			LoginType:     LoginTypeWeb,
+			AuthType:      LoginTypeWeb,
+			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	t.Run("test del user token token", func(t *testing.T) {
 		token, _, _ := redisAuth.GenerateToken(cc)
 		if token == "" {
@@ -195,17 +195,17 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 		if err != nil {
 			t.Fatalf("del user token cache  %v", err)
 		}
-		_, err = redisAuth.GetCustomClaims(token)
-		if !errors.Is(err, multi.ErrEmptyToken) {
-			t.Fatalf("get custom claims err want '%v' but get  '%v'", multi.ErrEmptyToken, err)
+		_, err = redisAuth.GetMultiClaims(token)
+		if !errors.Is(err, ErrEmptyToken) {
+			t.Fatalf("get custom claims err want '%v' but get  '%v'", ErrEmptyToken, err)
 		}
 
-		if uTokens, err := redisAuth.Client.SMembers(context.Background(), multi.GtSessionUserPrefix+cc.ID).Result(); err != nil {
+		if uTokens, err := redisAuth.Client.SMembers(context.Background(), GtSessionUserPrefix+cc.Id).Result(); err != nil {
 			t.Fatalf("user prefix value wantget %v", err)
 		} else if len(uTokens) != 0 {
 			t.Errorf("user prefix value want empty but get %+v", uTokens)
 		}
-		bindKey := multi.GtSessionBindUserPrefix + token
+		bindKey := GtSessionBindUserPrefix + token
 		key, _ := redisAuth.Client.Get(context.Background(), bindKey).Result()
 		if key != "" {
 			t.Errorf("bind user prefix value want empty but get %v", key)
@@ -214,20 +214,21 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 }
 
 func TestRedisIsUserTokenOver(t *testing.T) {
-	cc := multi.New(
-		&multi.Multi{
+	cc := New(
+		&Multi{
 			Id:            uint(3232),
 			Username:      "username",
 			TenancyId:     1,
 			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
-			AuthorityType: multi.AdminAuthority,
-			LoginType:     multi.LoginTypeWeb,
-			AuthType:      multi.LoginTypeWeb,
-			ExpiresIn:     10000,
+			AuthorityType: AdminAuthority,
+			LoginType:     LoginTypeWeb,
+			AuthType:      LoginTypeWeb,
+			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
+
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
 	}
@@ -241,14 +242,14 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 		wg.Wait()
 	}
 	t.Run("test redis is user token over", func(t *testing.T) {
-		isOver, err := redisAuth.isUserTokenOver(cc.AuthorityType, cc.ID)
+		isOver, err := redisAuth.isUserTokenOver(cc.AuthorityType, cc.Id)
 		if err != nil {
 			t.Fatalf("is user token over get %v", err)
 		}
 		if isOver {
 			t.Error("user token want not over  but get over")
 		}
-		count, err := redisAuth.getUserTokenCount(cc.AuthorityType, cc.ID)
+		count, err := redisAuth.getUserTokenCount(cc.AuthorityType, cc.Id)
 		if err != nil {
 			t.Fatalf("user token count get %v", err)
 		}
@@ -259,7 +260,7 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 }
 
 func TestRedisSetUserTokenMaxCount(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
 	}
@@ -280,7 +281,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 		if count != 3 {
 			t.Errorf("user token max count want %v  but get %v", 3, count)
 		}
-		isOver, err := redisAuth.isUserTokenOver(redisClaims.AuthorityType, redisClaims.ID)
+		isOver, err := redisAuth.isUserTokenOver(redisClaims.AuthorityType, redisClaims.Id)
 		if err != nil {
 			t.Fatalf("is user token over get %v", err)
 		}
@@ -290,7 +291,7 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 	})
 }
 func TestRedisCleanUserTokenCache(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
 		redisClaims.LoginType = i
@@ -301,10 +302,10 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 		wg.Wait()
 	}
 	t.Run("test del user token", func(t *testing.T) {
-		if err := redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID); err != nil {
+		if err := redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id); err != nil {
 			t.Fatalf("clear user token cache %v", err)
 		}
-		count, err := redisAuth.getUserTokenCount(redisClaims.AuthorityType, redisClaims.ID)
+		count, err := redisAuth.getUserTokenCount(redisClaims.AuthorityType, redisClaims.Id)
 		if err != nil {
 			t.Fatalf("user token count get %v", err)
 		}
@@ -314,8 +315,8 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 	})
 }
 
-func TestRedisGetCustomClaims(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+func TestRedisGetMultiClaims(t *testing.T) {
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	var token string
 	redisClaims.LoginType = 3
 	token, _, err := redisAuth.GenerateToken(redisClaims)
@@ -334,7 +335,7 @@ func TestRedisGetCustomClaims(t *testing.T) {
 	t.Run("test get custom claims", func(t *testing.T) {
 		for i := 0; i < 4; i++ {
 			go func() {
-				cc, err := redisAuth.GetCustomClaims(token)
+				cc, err := redisAuth.GetMultiClaims(token)
 				if err != nil {
 					t.Errorf("get custom claims  %v", err)
 				}
@@ -346,21 +347,21 @@ func TestRedisGetCustomClaims(t *testing.T) {
 }
 
 func TestRedisGetUserTokens(t *testing.T) {
-	cc := multi.New(
-		&multi.Multi{
-			Id:            uint(121322),
+	cc := New(
+		&Multi{
+			Id:            uint(121321),
 			Username:      "username",
 			TenancyId:     1,
 			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
-			AuthorityType: multi.AdminAuthority,
-			LoginType:     multi.LoginTypeWeb,
-			AuthType:      multi.LoginTypeWeb,
-			ExpiresIn:     10000,
+			AuthorityType: AdminAuthority,
+			LoginType:     LoginTypeWeb,
+			AuthType:      LoginTypeWeb,
+			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get user tokens by claims generate token %v \n", err)
@@ -380,7 +381,7 @@ func TestRedisGetUserTokens(t *testing.T) {
 	}
 
 	t.Run("test get user tokens by claims", func(t *testing.T) {
-		tokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
+		tokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.Id)
 		if err != nil {
 			t.Fatalf("get user tokens by claims %v", err)
 		}
@@ -392,21 +393,21 @@ func TestRedisGetUserTokens(t *testing.T) {
 }
 
 func TestRedisGetTokenByClaims(t *testing.T) {
-	cc := multi.New(
-		&multi.Multi{
+	cc := New(
+		&Multi{
 			Id:            uint(3232),
 			Username:      "username",
 			TenancyId:     1,
 			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
-			AuthorityType: multi.AdminAuthority,
-			LoginType:     multi.LoginTypeWeb,
-			AuthType:      multi.LoginTypeWeb,
-			ExpiresIn:     10000,
+			AuthorityType: AdminAuthority,
+			LoginType:     LoginTypeWeb,
+			AuthType:      LoginTypeWeb,
+			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.ID)
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
 	if err != nil {
 		t.Fatalf("get token by claims generate token %v \n", err)
@@ -440,8 +441,8 @@ func TestRedisGetTokenByClaims(t *testing.T) {
 	})
 
 }
-func TestRedisGetCustomClaimses(t *testing.T) {
-	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.ID)
+func TestRedisGetMultiClaimses(t *testing.T) {
+	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		redisClaims.LoginType = i
@@ -451,12 +452,12 @@ func TestRedisGetCustomClaimses(t *testing.T) {
 		}(i)
 		wg.Wait()
 	}
-	userTokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.ID)
+	userTokens, err := redisAuth.getUserTokens(redisClaims.AuthorityType, redisClaims.Id)
 	if err != nil {
 		t.Fatal("get custom claimses generate token is empty \n")
 	}
 	t.Run("test get custom claimses", func(t *testing.T) {
-		clas, err := redisAuth.getCustomClaimses(userTokens)
+		clas, err := redisAuth.getMultiClaimses(userTokens)
 		if err != nil {
 			t.Fatalf("get custom claimses %v", err)
 		}

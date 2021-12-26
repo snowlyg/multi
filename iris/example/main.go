@@ -31,7 +31,7 @@ func init() {
 		// },
 	}
 
-	err := multi_iris.InitDriver(&multi.Config{
+	err := multi.InitDriver(&multi.Config{
 		DriverType:      "redis",
 		UniversalClient: redis.NewUniversalClient(options)})
 	if err != nil {
@@ -68,8 +68,8 @@ func main() {
 
 func generateToken() iris.Handler {
 	return func(ctx iris.Context) {
-		claims := &multi.CustomClaims{
-			ID:            "1",
+		claims := &multi.MultiClaims{
+			Id:            "1",
 			Username:      "your name",
 			AuthorityId:   "your authority id",
 			TenancyId:     1,
@@ -78,7 +78,7 @@ func generateToken() iris.Handler {
 			LoginType:     multi.LoginTypeWeb,
 			AuthType:      multi.AuthPwd,
 			CreationDate:  time.Now().Local().Unix(),
-			ExpiresIn:     multi.RedisSessionTimeoutWeb.Milliseconds(),
+			ExpiresAt:     time.Now().Local().Add(multi.RedisSessionTimeoutWeb).Unix(),
 		}
 
 		token, _, err := multi.AuthDriver.GenerateToken(claims)

@@ -22,8 +22,8 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *context.Context) *multi.CustomClaims {
-	if v := ctx.Values().Get(claimsContextKey).(*multi.CustomClaims); v != nil {
+func Get(ctx *context.Context) *multi.MultiClaims {
+	if v := ctx.Values().Get(claimsContextKey).(*multi.MultiClaims); v != nil {
 		return v
 	}
 	return nil
@@ -48,7 +48,7 @@ func GetAuthorityId(ctx *context.Context) []string {
 // GetUserId 用户id
 func GetUserId(ctx *context.Context) uint {
 	if v := Get(ctx); v != nil {
-		id, err := strconv.Atoi(v.ID)
+		id, err := strconv.Atoi(v.Id)
 		if err != nil {
 			return 0
 		}
@@ -92,7 +92,7 @@ func GetCreationDate(ctx *context.Context) int64 {
 // GetExpiresIn 有效期
 func GetExpiresIn(ctx *context.Context) int64 {
 	if v := Get(ctx); v != nil {
-		return v.ExpiresIn
+		return v.ExpiresAt
 	}
 	return 0
 }
@@ -176,7 +176,7 @@ func (v *Verifier) RequestToken(ctx *context.Context) (token string) {
 	return
 }
 
-func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.CustomClaims, error) {
+func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.MultiClaims, error) {
 	if len(token) == 0 {
 		return nil, nil, errors.New("mutil: token is empty")
 	}
@@ -194,7 +194,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 		return nil, nil, err
 	}
 
-	rcc, err := multi.AuthDriver.GetCustomClaims(string(token))
+	rcc, err := multi.AuthDriver.GetMultiClaims(string(token))
 	if err != nil {
 		return nil, nil, err
 	}
