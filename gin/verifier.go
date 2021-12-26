@@ -1,7 +1,6 @@
 package gin
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -172,7 +171,7 @@ func (v *Verifier) RequestToken(ctx *gin.Context) (token string) {
 
 func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.MultiClaims, error) {
 	if len(token) == 0 {
-		return nil, nil, errors.New("mutil: token is empty")
+		return nil, nil, multi.ErrEmptyToken
 	}
 	var err error
 	for _, validator := range validators {

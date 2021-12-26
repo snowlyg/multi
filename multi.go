@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// redis 前缀
 const (
 	GtSessionTokenPrefix        = "GST:"           // token 缓存前缀
 	GtSessionBindUserPrefix     = "GSBU:"          // token 绑定用户前缀
@@ -20,13 +21,15 @@ var (
 	GtSessionUserMaxTokenDefault int64 = 10
 )
 
+// 错误类型
 var (
-	ErrTokenInvalid      = errors.New("TOKEN不可用")
-	ErrEmptyToken        = errors.New("TOKEN为空")
-	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限")
+	ErrTokenInvalid         = errors.New("TOKEN不可用")
+	ErrEmptyToken           = errors.New("TOKEN为空")
+	ErrOverMaxTokenCount    = errors.New("已达到同时登录设备上限")
 	ErrJwtNotSuportThisFunc = errors.New("JWT验证不支持次方法")
 )
 
+// 授权角色类型
 const (
 	NoneAuthority    int = iota // 空授权
 	AdminAuthority              // 管理员
@@ -34,6 +37,7 @@ const (
 	GeneralAuthority            //普通用户
 )
 
+// 授权类型
 const (
 	NoAuth int = iota
 	AuthPwd
@@ -41,6 +45,7 @@ const (
 	AuthThirdParty
 )
 
+// 登陆类型
 const (
 	LoginTypeWeb int = iota
 	LoginTypeApp
@@ -48,6 +53,7 @@ const (
 	LoginTypeDevice
 )
 
+// 授权时长
 var (
 	RedisSessionTimeoutWeb    = 4 * time.Hour            // 4 小时
 	RedisSessionTimeoutApp    = 7 * 24 * time.Hour       // 7 天
