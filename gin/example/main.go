@@ -12,7 +12,7 @@ import (
 )
 
 // init 初始化认证驱动
-// 驱动类型： 可选 redis ,local
+// 驱动类型： 可选 redis ,local,jwt
 func init() {
 	options := &redis.UniversalOptions{
 		Addrs:       []string{"127.0.0.1:6379"},
@@ -33,6 +33,7 @@ func init() {
 
 	err := multi.InitDriver(&multi.Config{
 		DriverType:      "redis",
+		TokenMaxCount:   10,
 		UniversalClient: redis.NewUniversalClient(options)})
 	if err != nil {
 		panic(fmt.Sprintf("auth is not init get err %v\n", err))
