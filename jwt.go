@@ -38,7 +38,7 @@ func (ra *JwtAuth) GenerateToken(claims *MultiClaims) (string, int64, error) {
 
 //  GetTokenByClaims 获取用户信息
 func (ra *JwtAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
-	return "", ErrJwtNotSuportThisFunc
+	return "", nil
 }
 
 //  GetMultiClaims 获取用户信息
@@ -64,22 +64,22 @@ func (ra *JwtAuth) GetMultiClaims(tokenString string) (*MultiClaims, error) {
 
 // SetUserTokenMaxCount 最大登录限制
 func (ra *JwtAuth) SetUserTokenMaxCount(tokenMaxCount int64) error {
-	return ErrJwtNotSuportThisFunc
+	return nil
 }
 
 //UpdateUserTokenCacheExpire 更新过期时间
 func (ra *JwtAuth) UpdateUserTokenCacheExpire(token string) error {
-	return ErrJwtNotSuportThisFunc
+	return nil
 }
 
 // DelUserTokenCache 删除token缓存
 func (ra *JwtAuth) DelUserTokenCache(token string) error {
-	return ErrJwtNotSuportThisFunc
+	return nil
 }
 
 // CleanUserTokenCache 清空token缓存
 func (ra *JwtAuth) CleanUserTokenCache(authorityType int, userId string) error {
-	return ErrJwtNotSuportThisFunc
+	return nil
 }
 
 // IsAdmin

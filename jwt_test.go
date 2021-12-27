@@ -1,7 +1,6 @@
 package multi
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -82,8 +81,8 @@ func TestJwtDelUserTokenCache(t *testing.T) {
 			t.Error("generate token is empty")
 		}
 		err := jwtAuth.DelUserTokenCache(token)
-		if !errors.Is(err, ErrJwtNotSuportThisFunc) {
-			t.Errorf("get token by claims token want %v but get %v", ErrJwtNotSuportThisFunc, err)
+		if err != nil {
+			t.Errorf("get token by claims token want %v but get %v", nil, err)
 		}
 
 	})
@@ -92,8 +91,8 @@ func TestJwtDelUserTokenCache(t *testing.T) {
 func TestJwtSetUserTokenMaxCount(t *testing.T) {
 	t.Run("test redis set user token max count", func(t *testing.T) {
 		err := jwtAuth.SetUserTokenMaxCount(3)
-		if !errors.Is(err, ErrJwtNotSuportThisFunc) {
-			t.Errorf("get token by claims token want %v but get %v", ErrJwtNotSuportThisFunc, err)
+		if err != nil {
+			t.Errorf("get token by claims token want %v but get %v", nil, err)
 		}
 	})
 }
@@ -132,9 +131,8 @@ func TestJwtGetMultiClaims(t *testing.T) {
 func TestJwtGetTokenByClaims(t *testing.T) {
 	t.Run("test get token by claims", func(t *testing.T) {
 		_, err := jwtAuth.GetTokenByClaims(jwtClaims)
-
-		if !errors.Is(err, ErrJwtNotSuportThisFunc) {
-			t.Errorf("get token by claims token want %v but get %v", ErrJwtNotSuportThisFunc, err)
+		if err != nil {
+			t.Errorf("get token by claims token want %v but get %v", nil, err)
 		}
 	})
 

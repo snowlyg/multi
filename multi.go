@@ -23,10 +23,9 @@ var (
 
 // 错误类型
 var (
-	ErrTokenInvalid         = errors.New("TOKEN不可用")
-	ErrEmptyToken           = errors.New("TOKEN为空")
-	ErrOverMaxTokenCount    = errors.New("已达到同时登录设备上限")
-	ErrJwtNotSuportThisFunc = errors.New("JWT验证不支持次方法")
+	ErrTokenInvalid      = errors.New("TOKEN不可用")
+	ErrEmptyToken        = errors.New("TOKEN为空")
+	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限")
 )
 
 // 授权角色类型
