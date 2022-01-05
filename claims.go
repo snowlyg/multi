@@ -37,6 +37,8 @@ func New(m *Multi) *MultiClaims {
 	claims := &MultiClaims{
 		Id:            strconv.FormatUint(uint64(m.Id), 10),
 		Username:      m.Username,
+		TenancyId:     m.TenancyId,
+		TenancyName:   m.TenancyName,
 		AuthorityId:   strings.Join(m.AuthorityIds, "-"),
 		AuthorityType: m.AuthorityType,
 		LoginType:     m.LoginType,
