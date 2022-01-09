@@ -1,5 +1,10 @@
 # Multi
-Golang gin Web 框架认证中间件
+Golang Web 框架认证中间件
+
+### 安装
+```sh
+  go get github.com/snowlyg/multi@latest
+```
 
 ### 文档
 - [文档](https://pkg.go.dev/github.com/snowlyg/multi)
