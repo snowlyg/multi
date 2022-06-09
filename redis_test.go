@@ -35,9 +35,8 @@ var (
 		},
 	}
 
-	redisAuth, _ = NewRedisAuth(redis.NewUniversalClient(options))
-	rToken       = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
-	redisClaims  = New(
+	rToken      = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
+	redisClaims = New(
 		&Multi{
 			Id:            uint(121321),
 			Username:      "username",
@@ -54,6 +53,10 @@ var (
 )
 
 func TestRedisGenerateToken(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	t.Run("test generate token", func(t *testing.T) {
 		token, expiresIn, err := redisAuth.GenerateToken(redisClaims)
@@ -125,6 +128,10 @@ func TestRedisGenerateToken(t *testing.T) {
 }
 
 func TestRedisToCache(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.Client.Del(context.Background(), GtSessionTokenPrefix+rToken)
 	t.Run("test generate token", func(t *testing.T) {
 		err := redisAuth.toCache(rToken, redisClaims)
@@ -183,7 +190,10 @@ func TestRedisDelUserTokenCache(t *testing.T) {
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	t.Run("test del user token token", func(t *testing.T) {
 		token, _, _ := redisAuth.GenerateToken(cc)
@@ -227,7 +237,10 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
@@ -260,6 +273,10 @@ func TestRedisIsUserTokenOver(t *testing.T) {
 }
 
 func TestRedisSetUserTokenMaxCount(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	if err := redisAuth.SetUserTokenMaxCount(10); err != nil {
 		t.Fatalf("set user token max count %v", err)
@@ -291,6 +308,10 @@ func TestRedisSetUserTokenMaxCount(t *testing.T) {
 	})
 }
 func TestRedisCleanUserTokenCache(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
@@ -316,8 +337,11 @@ func TestRedisCleanUserTokenCache(t *testing.T) {
 }
 
 func TestRedisGetMultiClaims(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
-	var token string
 	redisClaims.LoginType = 3
 	token, _, err := redisAuth.GenerateToken(redisClaims)
 	if err != nil {
@@ -360,6 +384,10 @@ func TestRedisGetUserTokens(t *testing.T) {
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
@@ -406,6 +434,10 @@ func TestRedisGetTokenByClaims(t *testing.T) {
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(cc.AuthorityType, cc.Id)
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	token, _, err := redisAuth.GenerateToken(redisClaims)
@@ -442,6 +474,10 @@ func TestRedisGetTokenByClaims(t *testing.T) {
 
 }
 func TestRedisGetMultiClaimses(t *testing.T) {
+	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	defer redisAuth.CleanUserTokenCache(redisClaims.AuthorityType, redisClaims.Id)
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
