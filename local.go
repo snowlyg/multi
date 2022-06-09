@@ -59,7 +59,7 @@ func (la *LocalAuth) syncUserTokenCache(token string) error {
 
 	userPrefixKey := GetUserPrefixKey(rcc.AuthorityType, rcc.Id)
 	ts := tokens{}
-	if uTokens, uFound := la.Cache.Get(userPrefixKey); uFound {
+	if uTokens, ok := la.Cache.Get(userPrefixKey); ok && uTokens != nil {
 		ts = uTokens.(tokens)
 	}
 	ts = append(ts, token)
@@ -79,7 +79,7 @@ func (la *LocalAuth) DelUserTokenCache(token string) error {
 	}
 
 	userPrefixKey := GetUserPrefixKey(rcc.AuthorityType, rcc.Id)
-	if utokens, ufound := la.Cache.Get(userPrefixKey); ufound {
+	if utokens, ok := la.Cache.Get(userPrefixKey); ok && utokens != nil {
 		t := utokens.(tokens)
 		for index, u := range t {
 			if u == token {
@@ -91,6 +91,7 @@ func (la *LocalAuth) DelUserTokenCache(token string) error {
 			}
 		}
 		la.Cache.Set(userPrefixKey, utokens, cache.NoExpiration)
+
 	}
 	err = la.delTokenCache(token)
 	if err != nil {
@@ -123,7 +124,7 @@ func (la *LocalAuth) UpdateUserTokenCacheExpire(token string) error {
 
 func (la *LocalAuth) GetMultiClaims(token string) (*MultiClaims, error) {
 	sKey := GtSessionTokenPrefix + token
-	if food, found := la.Cache.Get(sKey); !found {
+	if food, found := la.Cache.Get(sKey); !found || food == nil {
 		return nil, ErrTokenInvalid
 	} else {
 		return food.(*MultiClaims), nil
@@ -155,10 +156,8 @@ func (la *LocalAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 
 // getUserTokens 获取登录数量
 func (la *LocalAuth) getUserTokens(authorityType int, userId string) (tokens, error) {
-	if utokens, ufound := la.Cache.Get(GetUserPrefixKey(authorityType, userId)); ufound {
-		if utokens != nil {
-			return utokens.(tokens), nil
-		}
+	if utokens, ok := la.Cache.Get(GetUserPrefixKey(authorityType, userId)); ok && utokens != nil {
+		return utokens.(tokens), nil
 	}
 	return nil, nil
 }
