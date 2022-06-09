@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.18.x
+
+services:
+  - redis
+
+env:
+  - GO111MODULE=on 
+
+before_install:
+  - go get -v -t
+
+script:
+  - go test -cpu=1,2 -v  ./...
