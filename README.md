@@ -2,6 +2,7 @@
 [![GitHub license](https://img.shields.io/github/license/snowlyg/multi)](https://github.com/snowlyg/multi/blob/main/LICENSE)
 [![go doc](https://godoc.org/github.com/snowlyg/mutil?status.svg)](https://godoc.org/github.com/snowlyg/mutil)
 [![Build Status](https://app.travis-ci.com/snowlyg/multi.svg?branch=main)](https://app.travis-ci.com/snowlyg/multi)
+[![Build Status](https://codecov.io/gh/snowlyg/multi/branch/main/graph/badge.svg)](https://codecov.io/gh/snowlyg/multi)
 
 Golang Web 框架认证中间件
 
