@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"sync"
 	"testing"
@@ -13,26 +12,24 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var password = os.Getenv("redisPwd")
-
 var (
 	wg      sync.WaitGroup
 	options = &redis.UniversalOptions{
 		DB:          1,
 		Addrs:       []string{"127.0.0.1:6379"},
-		Password:    password, //
+		Password:    os.Getenv("redisPwd"), //
 		PoolSize:    10,
 		IdleTimeout: 300 * time.Second,
-		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			conn, err := net.Dial(network, addr)
-			if err == nil {
-				go func() {
-					time.Sleep(5 * time.Second)
-					conn.Close()
-				}()
-			}
-			return conn, err
-		},
+		// Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
+		// 	conn, err := net.Dial(network, addr)
+		// 	if err == nil {
+		// 		go func() {
+		// 			time.Sleep(5 * time.Second)
+		// 			conn.Close()
+		// 		}()
+		// 	}
+		// 	return conn, err
+		// },
 	}
 
 	rToken      = "TVRReU1EVTFOek13TmpFd09UWXlPRFF4TmcuTWpBeU1TMHdOeTB5T1ZRd09Ub3pNRG95T1Nzd09Eb3dNQQ.MTQyMDU1NzMwNjEwOTYyODrtrt"
@@ -53,7 +50,6 @@ var (
 )
 
 func TestRedisGenerateToken(t *testing.T) {
-	fmt.Printf("redisPwd:%s\n", os.Getenv("redisPwd"))
 	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
 	if err != nil {
 		t.Fatalf(err.Error())
