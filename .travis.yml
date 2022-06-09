@@ -10,8 +10,7 @@ services:
   - redis
 
 env:
-  - GO111MODULE=on 
-  - redisPwd=secret 
+  - GO111MODULE=on redisPwd=secret  
 
 before_install:
   - go get -v -t ./...
