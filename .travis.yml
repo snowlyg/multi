@@ -3,14 +3,21 @@ language: go
 go:
   - 1.18.x
 
+before_script:
+  - sudo redis-server /etc/redis/redis.conf --port 6379 --requirepass 'secret'
+
 services:
   - redis
 
 env:
   - GO111MODULE=on 
+  - redisPwd=secret 
 
 before_install:
-  - go get -v -t
+  - go get -v -t ./...
 
 script:
-  - go test -cpu=1,2 -v  ./...
+  - go test -cpu=1,2 -v -race -coverprofile=coverage.txt -covermode=atomic  ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
