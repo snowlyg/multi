@@ -73,6 +73,7 @@ func InitDriver(c *Config) error {
 		if err != nil {
 			return err
 		}
+
 		AuthDriver = driver
 		err = AuthDriver.SetUserTokenMaxCount(c.TokenMaxCount)
 		if err != nil {

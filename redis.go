@@ -17,7 +17,10 @@ type RedisAuth struct {
 func NewRedisAuth(client redis.UniversalClient) (*RedisAuth, error) {
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
-		return nil, fmt.Errorf("redis ping %w", err)
+		return nil, err
+	}
+	if client == nil {
+		return nil, errors.New("redis client is nil")
 	}
 	return &RedisAuth{
 		Client: client,
