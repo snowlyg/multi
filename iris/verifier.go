@@ -40,14 +40,15 @@ func GetAuthorityId(ctx *context.Context) []string {
 
 // GetUserId 用户id
 func GetUserId(ctx *context.Context) uint {
-	if v := Get(ctx); v != nil {
-		id, err := strconv.Atoi(v.Id)
-		if err != nil {
-			return 0
-		}
-		return uint(id)
+	v := Get(ctx)
+	if v == nil {
+		return 0
 	}
-	return 0
+	id, err := strconv.Atoi(v.Id)
+	if err != nil {
+		return 0
+	}
+	return uint(id)
 }
 
 // GetUsername 用户名
@@ -91,45 +92,30 @@ func GetExpiresIn(ctx *context.Context) int64 {
 }
 
 func GetVerifiedToken(ctx *context.Context) []byte {
-	if v := ctx.Values().Get(verifiedTokenContextKey); v != nil {
-		if tok, ok := v.([]byte); ok {
-			return tok
-		}
+	v := ctx.Values().Get(verifiedTokenContextKey)
+	if v == nil {
+		return nil
+	}
+	if tok, ok := v.([]byte); ok {
+		return tok
 	}
 	return nil
 }
 
-func IsTenancy(ctx *context.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsTenancy(string(v))
-		if err != nil {
-			return false
-		}
-		return b
+func IsRole(ctx *context.Context, authorityType int) bool {
+	v := GetVerifiedToken(ctx)
+	if v == nil {
+		return false
 	}
-	return false
-}
-
-func IsGeneral(ctx *context.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsGeneral(string(v))
-		if err != nil {
-			return false
-		}
-		return b
+	b, err := multi.AuthDriver.IsRole(string(v), authorityType)
+	if err != nil {
+		return false
 	}
-	return false
+	return b
 }
 
 func IsAdmin(ctx *context.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsAdmin(string(v))
-		if err != nil {
-			return false
-		}
-		return b
-	}
-	return false
+	return IsRole(ctx, multi.AdminAuthority)
 }
 
 type Verifier struct {
@@ -188,6 +174,11 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 	}
 
 	rcc, err := multi.AuthDriver.GetMultiClaims(string(token))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = rcc.Valid()
 	if err != nil {
 		return nil, nil, err
 	}

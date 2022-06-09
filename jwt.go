@@ -82,31 +82,13 @@ func (ra *JwtAuth) CleanUserTokenCache(authorityType int, userId string) error {
 	return nil
 }
 
-// IsAdmin
-func (ra *JwtAuth) IsAdmin(token string) (bool, error) {
+// IsRole
+func (ra *JwtAuth) IsRole(token string, authorityType int) (bool, error) {
 	rcc, err := ra.GetMultiClaims(token)
 	if err != nil {
-		return false, fmt.Errorf("用户角色是 %w", err)
+		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
-	return rcc.AuthorityType == AdminAuthority, nil
-}
-
-// IsTenancy
-func (ra *JwtAuth) IsTenancy(token string) (bool, error) {
-	rcc, err := ra.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("用户角色是 %w", err)
-	}
-	return rcc.AuthorityType == TenancyAuthority, nil
-}
-
-// IsGeneral
-func (ra *JwtAuth) IsGeneral(token string) (bool, error) {
-	rcc, err := ra.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("用户角色是 %w", err)
-	}
-	return rcc.AuthorityType == GeneralAuthority, nil
+	return rcc.AuthorityType == authorityType, nil
 }
 
 // Close

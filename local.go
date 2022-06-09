@@ -238,31 +238,13 @@ func (la *LocalAuth) CleanUserTokenCache(authorityType int, userId string) error
 	return nil
 }
 
-// IsAdmin
-func (la *LocalAuth) IsAdmin(token string) (bool, error) {
+// IsRole
+func (la *LocalAuth) IsRole(token string, authorityType int) (bool, error) {
 	rcc, err := la.GetMultiClaims(token)
 	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
+		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
-	return rcc.AuthorityType == AdminAuthority, nil
-}
-
-// IsTenancy
-func (la *LocalAuth) IsTenancy(token string) (bool, error) {
-	rcc, err := la.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
-	}
-	return rcc.AuthorityType == TenancyAuthority, nil
-}
-
-// IsGeneral
-func (la *LocalAuth) IsGeneral(token string) (bool, error) {
-	rcc, err := la.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
-	}
-	return rcc.AuthorityType == GeneralAuthority, nil
+	return rcc.AuthorityType == authorityType, nil
 }
 
 // 兼容 redis

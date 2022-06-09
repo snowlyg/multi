@@ -10,6 +10,12 @@ import (
 	"github.com/snowlyg/helper/dir"
 )
 
+var (
+	sep    = []byte(".")
+	pad    = []byte("=")
+	padStr = string(pad)
+)
+
 // GetToken 雪花算法,支持分布式集群方式
 func GetToken() (string, error) {
 	node, err := snowflake.NewNode(1)
@@ -23,12 +29,6 @@ func GetToken() (string, error) {
 	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
 	return string(Base64Encode([]byte(token))), nil
 }
-
-var (
-	sep    = []byte(".")
-	pad    = []byte("=")
-	padStr = string(pad)
-)
 
 // joinParts
 func joinParts(parts ...[]byte) []byte {

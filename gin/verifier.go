@@ -16,12 +16,15 @@ const (
 
 // Get returns the claims decoded by a verifier.
 func Get(ctx *gin.Context) *multi.MultiClaims {
-	if v, b := ctx.Get(claimsContextKey); b {
-		if tok, ok := v.(*multi.MultiClaims); ok {
-			return tok
-		}
+	v, b := ctx.Get(claimsContextKey)
+	if !b {
+		return nil
 	}
-	return nil
+	tok, ok := v.(*multi.MultiClaims)
+	if !ok {
+		return nil
+	}
+	return tok
 }
 
 // GetAuthorityType 角色类型
@@ -42,14 +45,15 @@ func GetAuthorityId(ctx *gin.Context) []string {
 
 // GetUserId 用户id
 func GetUserId(ctx *gin.Context) uint {
-	if v := Get(ctx); v != nil {
-		id, err := strconv.Atoi(v.Id)
-		if err != nil {
-			return 0
-		}
-		return uint(id)
+	v := Get(ctx)
+	if v == nil {
+		return 0
 	}
-	return 0
+	id, err := strconv.Atoi(v.Id)
+	if err != nil {
+		return 0
+	}
+	return uint(id)
 }
 
 // GetUsername 用户名
@@ -93,45 +97,30 @@ func GetExpiresIn(ctx *gin.Context) int64 {
 }
 
 func GetVerifiedToken(ctx *gin.Context) []byte {
-	if v, b := ctx.Get(verifiedTokenContextKey); b {
-		if tok, ok := v.([]byte); ok {
-			return tok
-		}
+	v, b := ctx.Get(verifiedTokenContextKey)
+	if !b {
+		return nil
+	}
+	if tok, ok := v.([]byte); ok {
+		return tok
 	}
 	return nil
 }
 
-func IsTenancy(ctx *gin.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsTenancy(string(v))
-		if err != nil {
-			return false
-		}
-		return b
+func IsRole(ctx *gin.Context, authorityType int) bool {
+	v := GetVerifiedToken(ctx)
+	if v == nil {
+		return false
 	}
-	return false
-}
-
-func IsGeneral(ctx *gin.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsGeneral(string(v))
-		if err != nil {
-			return false
-		}
-		return b
+	b, err := multi.AuthDriver.IsRole(string(v), authorityType)
+	if err != nil {
+		return false
 	}
-	return false
+	return b
 }
 
 func IsAdmin(ctx *gin.Context) bool {
-	if v := GetVerifiedToken(ctx); v != nil {
-		b, err := multi.AuthDriver.IsAdmin(string(v))
-		if err != nil {
-			return false
-		}
-		return b
-	}
-	return false
+	return IsRole(ctx, multi.AdminAuthority)
 }
 
 type Verifier struct {
@@ -165,7 +154,6 @@ func (v *Verifier) RequestToken(ctx *gin.Context) (token string) {
 			break // ok we found it.
 		}
 	}
-
 	return
 }
 
@@ -181,17 +169,18 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 			break
 		}
 	}
-
 	if err != nil {
 		// Exit on parsing standard claims error(when Plain is missing) or standard claims validation error or custom validators.
 		return nil, nil, err
 	}
-
 	rcc, err := multi.AuthDriver.GetMultiClaims(string(token))
 	if err != nil {
 		return nil, nil, err
 	}
-
+	err = rcc.Valid()
+	if err != nil {
+		return nil, nil, err
+	}
 	return token, rcc, nil
 }
 
@@ -204,7 +193,6 @@ func (v *Verifier) Verify(validators ...multi.TokenValidator) gin.HandlerFunc {
 			v.ErrorHandler(ctx, err)
 			return
 		}
-
 		ctx.Set(claimsContextKey, rcc)
 		ctx.Set(verifiedTokenContextKey, verifiedToken)
 		ctx.Next()

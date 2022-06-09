@@ -310,31 +310,13 @@ func (ra *RedisAuth) CleanUserTokenCache(authorityType int, userId string) error
 	return nil
 }
 
-// IsAdmin
-func (ra *RedisAuth) IsAdmin(token string) (bool, error) {
+// IsRole
+func (ra *RedisAuth) IsRole(token string, authorityType int) (bool, error) {
 	rcc, err := ra.GetMultiClaims(token)
 	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
+		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
-	return rcc.AuthorityType == AdminAuthority, nil
-}
-
-// IsTenancy
-func (ra *RedisAuth) IsTenancy(token string) (bool, error) {
-	rcc, err := ra.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
-	}
-	return rcc.AuthorityType == TenancyAuthority, nil
-}
-
-// IsGeneral
-func (ra *RedisAuth) IsGeneral(token string) (bool, error) {
-	rcc, err := ra.GetMultiClaims(token)
-	if err != nil {
-		return false, fmt.Errorf("get auth id %w", err)
-	}
-	return rcc.AuthorityType == GeneralAuthority, nil
+	return rcc.AuthorityType == authorityType, nil
 }
 
 // Close

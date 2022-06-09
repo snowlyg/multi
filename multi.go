@@ -152,9 +152,7 @@ type Authentication interface {
 	GetTokenByClaims(claims *MultiClaims) (string, error)       // 通过用户信息获取token
 	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
 	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
-	IsAdmin(token string) (bool, error)
-	IsTenancy(token string) (bool, error)
-	IsGeneral(token string) (bool, error)
+	IsRole(token string, authorityType int) (bool, error)
 	Close()
 }
 
