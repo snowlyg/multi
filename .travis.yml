@@ -6,9 +6,6 @@ go:
 before_script:
   - sudo redis-server /etc/redis/redis.conf --port 6379 --requirepass 'secret'
 
-services:
-  - redis-server
-
 env:
   - GO111MODULE=on redisPwd=secret  
 

@@ -50,7 +50,6 @@ var (
 )
 
 func TestRedisGenerateToken(t *testing.T) {
-	fmt.Println(options)
 	redisAuth, err := NewRedisAuth(redis.NewUniversalClient(options))
 	if err != nil {
 		t.Fatalf(err.Error())
