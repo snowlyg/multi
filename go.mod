@@ -10,7 +10,7 @@ require (
 	github.com/kataras/iris/v12 v12.2.0-beta3
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/satori/go.uuid v1.2.0
+	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/snowlyg/helper v0.0.7
 )
 
