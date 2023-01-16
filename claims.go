@@ -141,9 +141,13 @@ func (c *MultiClaims) VerifyAuthorityType() bool {
 }
 
 func (c *MultiClaims) VerifyLoginType() bool {
-	return arr.InArray([]int{LoginTypeWeb, LoginTypeApp, LoginTypeWx, LoginTypeDevice}, c.LoginType)
+	loginType := arr.NewCheckArrayType(4)
+	loginType.AddMutil(LoginTypeWeb, LoginTypeApp, LoginTypeWx, LoginTypeDevice)
+	return loginType.Check(c.LoginType)
 }
 
 func (c *MultiClaims) VerifyAuthType() bool {
-	return arr.InArray([]int{NoAuth, AuthPwd, AuthCode, AuthThirdParty}, c.AuthType)
+	authType := arr.NewCheckArrayType(4)
+	authType.AddMutil(NoAuth, AuthPwd, AuthCode, AuthThirdParty)
+	return authType.Check(c.AuthType)
 }

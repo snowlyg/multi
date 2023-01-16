@@ -2,7 +2,6 @@ package multi
 
 import (
 	"bytes"
-	"sync"
 	"testing"
 
 	"github.com/snowlyg/helper/arr"
@@ -45,8 +44,8 @@ func TestBase64Encode(t *testing.T) {
 }
 
 func BenchmarkGetToken(b *testing.B) {
-	tokens := Token{value: []string{}}
 	b.Run("Benchmark test get token", func(b *testing.B) {
+		tokens := Token{CheckArrayType: *arr.NewCheckArrayType(b.N)}
 		for i := 0; i < b.N; i++ {
 			token, err := GetToken()
 			if err != nil {
@@ -55,28 +54,14 @@ func BenchmarkGetToken(b *testing.B) {
 			if token == "" {
 				b.Error("Generate token is fail.")
 			}
-			isRepeat := tokens.Compare(token)
-			if isRepeat {
+			if tokens.Check(token) {
 				b.Fatalf("token is repeat")
 			}
-			tokens.AddToken(token)
+			tokens.Add(token)
 		}
 	})
 }
 
 type Token struct {
-	value []string
-	sync.Mutex
-}
-
-func (t *Token) AddToken(token string) {
-	t.Lock()
-	defer t.Unlock()
-	t.value = append(t.value, token)
-}
-
-func (t *Token) Compare(token string) bool {
-	t.Lock()
-	defer t.Unlock()
-	return arr.InArray(t.value, token)
+	arr.CheckArrayType
 }
