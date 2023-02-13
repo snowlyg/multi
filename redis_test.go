@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,8 +17,8 @@ var (
 	wg      sync.WaitGroup
 	options = &redis.UniversalOptions{
 		DB:          1,
-		Addrs:       []string{"127.0.0.1:6379"},
-		Password:    os.Getenv("redisPwd"), //
+		Addrs:       []string{strings.TrimSpace(os.Getenv("redisAddr"))},
+		Password:    strings.TrimSpace(os.Getenv("redisProPwd")), //
 		PoolSize:    10,
 		IdleTimeout: 300 * time.Second,
 		// Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
