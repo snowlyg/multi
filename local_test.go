@@ -23,7 +23,7 @@ var (
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	userKey = GetUserPrefixKey(customClaims.AuthorityType, customClaims.Id)
+	userKey = getUserPrefixKey(customClaims.AuthorityType, customClaims.Id)
 )
 
 func TestNewLocalAuth(t *testing.T) {

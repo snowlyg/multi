@@ -47,7 +47,7 @@ var (
 			ExpiresAt:     time.Now().Local().Add(RedisSessionTimeoutWeb).Unix(),
 		},
 	)
-	ruserKey = GetUserPrefixKey(redisClaims.AuthorityType, redisClaims.Id)
+	ruserKey = getUserPrefixKey(redisClaims.AuthorityType, redisClaims.Id)
 )
 
 func TestRedisGenerateToken(t *testing.T) {

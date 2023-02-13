@@ -8,12 +8,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// redis 前缀
 const (
-	GtSessionTokenPrefix        = "GST:"           // token 缓存前缀
-	GtSessionBindUserPrefix     = "GSBU:"          // token 绑定用户前缀
-	GtSessionUserPrefix         = "GSU:"           // 用户前缀
-	GtSessionUserMaxTokenPrefix = "GTUserMaxToken" // 用户最大 token 数前缀
+	GtSessionTokenPrefix        = "GST:"           // token perfix
+	GtSessionBindUserPrefix     = "GSBU:"          // token perfix for bind user
+	GtSessionUserPrefix         = "GSU:"           // user perfix
+	GtSessionUserMaxTokenPrefix = "GTUserMaxToken" // user max token prefix
 )
 
 var (
@@ -21,22 +20,21 @@ var (
 	GtSessionUserMaxTokenDefault int64 = 10
 )
 
-// 错误类型
 var (
-	ErrTokenInvalid      = errors.New("TOKEN不可用")
-	ErrEmptyToken        = errors.New("TOKEN为空")
-	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限")
+	ErrTokenInvalid      = errors.New("TOKEN IS INVALID")
+	ErrEmptyToken        = errors.New("TOKEN IS EMPTY")
+	ErrOverMaxTokenCount = errors.New("OVER LOGIN DEVICE LIMIT")
 )
 
-// 授权角色类型
+// role's type
 const (
-	NoneAuthority    int = iota // 空授权
-	AdminAuthority              // 管理员
-	TenancyAuthority            // 商户
-	GeneralAuthority            //普通用户
+	NoneAuthority    int = iota //
+	AdminAuthority              // admin
+	TenancyAuthority            // tenancy
+	GeneralAuthority            // general
 )
 
-// 授权类型
+// auth's type
 const (
 	NoAuth int = iota
 	AuthPwd
@@ -44,7 +42,7 @@ const (
 	AuthThirdParty
 )
 
-// 登陆类型
+// login type
 const (
 	LoginTypeWeb int = iota
 	LoginTypeApp
@@ -52,7 +50,7 @@ const (
 	LoginTypeDevice
 )
 
-// 授权时长
+// auth time
 var (
 	RedisSessionTimeoutWeb    = 4 * time.Hour            // 4 小时
 	RedisSessionTimeoutApp    = 7 * 24 * time.Hour       // 7 天
@@ -60,9 +58,7 @@ var (
 	RedisSessionTimeoutDevice = 5 * 52 * 168 * time.Hour // 1年
 )
 
-// InitDriver 认证驱动
-// redis 需要设置redis
-// local 使用本地内存
+// InitDriver
 func InitDriver(c *Config) error {
 	if c.TokenMaxCount == 0 {
 		c.TokenMaxCount = 10
@@ -144,21 +140,21 @@ func (fn TokenValidatorFunc) ValidateToken(token []byte, err error) error {
 
 var AuthDriver Authentication
 
-// Authentication  认证
+// Authentication
 type Authentication interface {
-	GenerateToken(claims *MultiClaims) (string, int64, error)   // 生成 token
-	DelUserTokenCache(token string) error                       // 清除用户当前token信息
-	UpdateUserTokenCacheExpire(token string) error              // 更新token 过期时间
-	GetMultiClaims(token string) (*MultiClaims, error)          // 获取token用户信息
-	GetTokenByClaims(claims *MultiClaims) (string, error)       // 通过用户信息获取token
-	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
-	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
+	GenerateToken(claims *MultiClaims) (string, int64, error)
+	DelUserTokenCache(token string) error
+	UpdateUserTokenCacheExpire(token string) error
+	GetMultiClaims(token string) (*MultiClaims, error)
+	GetTokenByClaims(claims *MultiClaims) (string, error)
+	CleanUserTokenCache(authorityType int, userId string) error
+	SetUserTokenMaxCount(tokenMaxCount int64) error
 	IsRole(token string, authorityType int) (bool, error)
 	Close()
 }
 
-// GetTokenExpire 过期时间
-func GetTokenExpire(loginType int) time.Duration {
+// getTokenExpire
+func getTokenExpire(loginType int) time.Duration {
 	switch loginType {
 	case LoginTypeWeb:
 		return RedisSessionTimeoutWeb
@@ -173,7 +169,7 @@ func GetTokenExpire(loginType int) time.Duration {
 	}
 }
 
-// GetUserPrefixKey
-func GetUserPrefixKey(authorityType int, id string) string {
+// getUserPrefixKey
+func getUserPrefixKey(authorityType int, id string) string {
 	return fmt.Sprintf("%s%d_%s", GtSessionUserPrefix, authorityType, id)
 }

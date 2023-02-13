@@ -25,17 +25,17 @@ const (
 	ValidationErrorAuthType
 )
 
-// 自定义结构
-// Id 用户id
-// Username 用户名
-// TenancyId 商户id
-// TenancyName 商户名称
-// AuthorityId 角色id
-// AuthorityType 角色类型
-// LoginType 登录类型 web,app,wechat
-// AuthType  授权类型 密码,验证码,第三方
-// CreationDate 登录时间
-// ExpiresIn 有效期
+// Custom struct
+// Id use, id
+// Username
+// TenancyId
+// TenancyName
+// AuthorityId
+// AuthorityType
+// LoginType  web,app,wechat
+// AuthType
+// CreationDate
+// ExpiresIn
 type MultiClaims struct {
 	Id            string `json:"id,omitempty" redis:"id"`
 	Username      string `json:"username,omitempty" redis:"username"`

@@ -27,7 +27,7 @@ func GetToken() (string, error) {
 		return "", fmt.Errorf("mutil: create token %w", err)
 	}
 
-	// 混入两个时间，防止并发token重复
+	// 混入两个时间，防止并发 token 重复
 	nodeBytes, _ := dir.Md5Byte(Base64Encode(node.Generate().Bytes()))
 	uuidBytes, _ := dir.Md5Byte(Base64Encode(joinParts(Base64Encode(v4.Bytes()), []byte(nodeBytes))))
 	token := joinParts(Base64Encode([]byte(uuidBytes)), Base64Encode([]byte(nodeBytes)))
