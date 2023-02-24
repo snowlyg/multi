@@ -36,12 +36,12 @@ func (ra *JwtAuth) GenerateToken(claims *MultiClaims) (string, int64, error) {
 	return tokenString, 0, nil
 }
 
-//  GetTokenByClaims 获取用户信息
+// GetTokenByClaims
 func (ra *JwtAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
-	return "", nil
+	return "", ErrForJwt
 }
 
-//  GetMultiClaims 获取用户信息
+// GetMultiClaims
 func (ra *JwtAuth) GetMultiClaims(tokenString string) (*MultiClaims, error) {
 	mc := &MultiClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, mc, func(token *jwt.Token) (interface{}, error) {
@@ -62,24 +62,24 @@ func (ra *JwtAuth) GetMultiClaims(tokenString string) (*MultiClaims, error) {
 	}
 }
 
-// SetUserTokenMaxCount 最大登录限制
+// SetUserTokenMaxCount
 func (ra *JwtAuth) SetUserTokenMaxCount(tokenMaxCount int64) error {
-	return nil
+	return ErrForJwt
 }
 
-//UpdateUserTokenCacheExpire 更新过期时间
+// UpdateUserTokenCacheExpire
 func (ra *JwtAuth) UpdateUserTokenCacheExpire(token string) error {
-	return nil
+	return ErrForJwt
 }
 
-// DelUserTokenCache 删除token缓存
+// DelUserTokenCache
 func (ra *JwtAuth) DelUserTokenCache(token string) error {
-	return nil
+	return ErrForJwt
 }
 
-// CleanUserTokenCache 清空token缓存
+// CleanUserTokenCache
 func (ra *JwtAuth) CleanUserTokenCache(authorityType int, userId string) error {
-	return nil
+	return ErrForJwt
 }
 
 // IsRole

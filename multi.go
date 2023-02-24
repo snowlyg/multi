@@ -24,6 +24,7 @@ var (
 	ErrTokenInvalid      = errors.New("TOKEN IS INVALID")
 	ErrEmptyToken        = errors.New("TOKEN IS EMPTY")
 	ErrOverMaxTokenCount = errors.New("OVER LOGIN DEVICE LIMIT")
+	ErrForJwt            = errors.New("JWT NOT SUPPORT THIS FEATURE")
 )
 
 // role's type
