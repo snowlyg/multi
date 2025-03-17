@@ -1,4 +1,4 @@
-package gin
+package multi
 
 import (
 	"net/http"
@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/snowlyg/multi"
 )
 
 const (
@@ -15,12 +14,12 @@ const (
 )
 
 // Get returns the claims decoded by a verifier.
-func Get(ctx *gin.Context) *multi.MultiClaims {
+func Get(ctx *gin.Context) *MultiClaims {
 	v, b := ctx.Get(claimsContextKey)
 	if !b {
 		return nil
 	}
-	tok, ok := v.(*multi.MultiClaims)
+	tok, ok := v.(*MultiClaims)
 	if !ok {
 		return nil
 	}
@@ -38,7 +37,7 @@ func GetAuthorityType(ctx *gin.Context) int {
 // GetAuthorityId 角色id
 func GetAuthorityId(ctx *gin.Context) []string {
 	if v := Get(ctx); v != nil {
-		return strings.Split(v.AuthorityId, multi.AuthorityTypeSplit)
+		return strings.Split(v.AuthorityId, AuthorityTypeSplit)
 	}
 	return nil
 }
@@ -112,7 +111,7 @@ func IsRole(ctx *gin.Context, authorityType int) bool {
 	if v == nil {
 		return false
 	}
-	b, err := multi.AuthDriver.IsRole(string(v), authorityType)
+	b, err := AuthDriver.IsRole(string(v), authorityType)
 	if err != nil {
 		return false
 	}
@@ -120,16 +119,16 @@ func IsRole(ctx *gin.Context, authorityType int) bool {
 }
 
 func IsAdmin(ctx *gin.Context) bool {
-	return IsRole(ctx, multi.AdminAuthority)
+	return IsRole(ctx, AdminAuthority)
 }
 
 type Verifier struct {
 	Extractors   []TokenExtractor
-	Validators   []multi.TokenValidator
+	Validators   []TokenValidator
 	ErrorHandler func(ctx *gin.Context, err error)
 }
 
-func NewVerifier(validators ...multi.TokenValidator) *Verifier {
+func NewVerifier(validators ...TokenValidator) *Verifier {
 	return &Verifier{
 		Extractors: []TokenExtractor{FromHeader, FromQuery},
 		ErrorHandler: func(ctx *gin.Context, err error) {
@@ -157,9 +156,9 @@ func (v *Verifier) RequestToken(ctx *gin.Context) (token string) {
 	return
 }
 
-func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator) ([]byte, *multi.MultiClaims, error) {
+func (v *Verifier) VerifyToken(token []byte, validators ...TokenValidator) ([]byte, *MultiClaims, error) {
 	if len(token) == 0 {
-		return nil, nil, multi.ErrEmptyToken
+		return nil, nil, ErrEmptyToken
 	}
 	var err error
 	for _, validator := range validators {
@@ -173,7 +172,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 		// Exit on parsing standard claims error(when Plain is missing) or standard claims validation error or custom validators.
 		return nil, nil, err
 	}
-	rcc, err := multi.AuthDriver.GetMultiClaims(string(token))
+	rcc, err := AuthDriver.GetMultiClaims(string(token))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -184,7 +183,7 @@ func (v *Verifier) VerifyToken(token []byte, validators ...multi.TokenValidator)
 	return token, rcc, nil
 }
 
-func (v *Verifier) Verify(validators ...multi.TokenValidator) gin.HandlerFunc {
+func (v *Verifier) Verify(validators ...TokenValidator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := []byte(v.RequestToken(ctx))
 		verifiedToken, rcc, err := v.VerifyToken(token, validators...)

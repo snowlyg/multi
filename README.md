@@ -19,7 +19,6 @@ Golang Web 框架认证中间件
 #### 简单使用
 
 - [gin](gin/example/main.go)
-- [iris](iris/example/main.go)
 
 #### 完整使用
 

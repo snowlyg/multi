@@ -18,7 +18,7 @@ options := &redis.UniversalOptions{
 		// },
 	}
 
-	err := multi.InitDriver(&multi.Config{
+	err := InitDriver(&Config{
 		DriverType:      "redis",
 		TokenMaxCount: 10,
 		UniversalClient: redis.NewUniversalClient(options)})
@@ -27,7 +27,7 @@ options := &redis.UniversalOptions{
 	}
 
 ======== for local driver ==============
-	err := multi.InitDriver(&multi.Config{
+	err := InitDriver(&Config{
 		DriverType:      "local"
 	if err != nil {
 		panic(err)
@@ -35,7 +35,7 @@ options := &redis.UniversalOptions{
 
 
 ======== for jwt driver ==============
-	err := multi.InitDriver(&multi.Config{
+	err := InitDriver(&Config{
 		DriverType:      "jwt",
 		HmacSecret:      "your hmac_secret",
 	if err != nil {

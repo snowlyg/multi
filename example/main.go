@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/snowlyg/multi"
-	multi_gin "github.com/snowlyg/multi/gin"
 )
 
 // init 初始化认证驱动
@@ -41,8 +40,8 @@ func init() {
 }
 
 func auth() gin.HandlerFunc {
-	verifier := multi_gin.NewVerifier()
-	verifier.Extractors = []multi_gin.TokenExtractor{multi_gin.FromHeader} // extract token only from Authorization: Bearer $token
+	verifier := multi.NewVerifier()
+	verifier.Extractors = []multi.TokenExtractor{multi.FromHeader} // extract token only from Authorization: Bearer $token
 	return verifier.Verify()
 }
 
@@ -93,12 +92,12 @@ func generateToken() gin.HandlerFunc {
 }
 
 func protected(ctx *gin.Context) {
-	claims := multi_gin.Get(ctx)
+	claims := multi.Get(ctx)
 	ctx.JSON(http.StatusOK, fmt.Sprintf("claims=%+v\n", claims))
 }
 
 func logout(ctx *gin.Context) {
-	token := multi_gin.GetVerifiedToken(ctx)
+	token := multi.GetVerifiedToken(ctx)
 	if token == nil {
 		ctx.String(http.StatusOK, "授权凭证为空")
 		return

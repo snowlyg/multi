@@ -128,7 +128,7 @@ func (ra *RedisAuth) GetMultiClaims(token string) (*MultiClaims, error) {
 		return nil, fmt.Errorf("get custom claims redis hgetall %w", err)
 	}
 
-	if cla == nil || cla.Id == "" {
+	if cla.Id == "" {
 		return nil, ErrEmptyToken
 	}
 
@@ -250,16 +250,11 @@ func (ra *RedisAuth) DelUserTokenCache(token string) error {
 		return errors.New("del user token, reids cache is nil")
 	}
 
-	err = ra.delUserTokenPrefixToken(cla.AuthorityType, cla.Id, token)
-	if err != nil {
+	if err = ra.delUserTokenPrefixToken(cla.AuthorityType, cla.Id, token); err != nil {
 		return err
 	}
 
-	err = ra.delTokenCache(token)
-	if err != nil {
-		return err
-	}
-	if err != nil {
+	if err = ra.delTokenCache(token); err != nil {
 		return err
 	}
 	return nil
