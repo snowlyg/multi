@@ -43,4 +43,4 @@ options := &redis.UniversalOptions{
 	}
 */
 
-package multi
+package v2

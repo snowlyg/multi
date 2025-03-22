@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"errors"
@@ -26,40 +26,37 @@ const (
 )
 
 // 自定义结构
-// Id 用户id
-// Username 用户名
-// TenancyId 商户id
-// TenancyName 商户名称
-// AuthorityId 角色id
-// AuthorityType 角色类型
-// LoginType 登录类型 web,app,wechat
-// AuthType  授权类型 密码,验证码,第三方
-// CreationDate 登录时间
-// ExpiresIn 有效期
+// Id id
+// SuperAdmin superAdmin
+// Username username
+// AuthorityId role id
+// AuthorityType role type
+// LoginType login type:web,app,wechat
+// AuthType  auth type: password,eg.
+// CreationDate LoginTime
+// ExpiresIn expires time
 type MultiClaims struct {
 	Id            string `json:"id,omitempty" redis:"id"`
+	SuperAdmin    bool   `json:"superAdmin,omitempty" redis:"superAdmin"`
 	Username      string `json:"username,omitempty" redis:"username"`
-	TenancyId     uint   `json:"tenancyId,omitempty" redis:"tenancy_id"`
-	TenancyName   string `json:"tenancyName,omitempty" redis:"tenancy_name"`
 	AuthorityId   string `json:"authorityId,omitempty" redis:"authority_id"`
 	AuthorityType int    `json:"authorityType,omitempty" redis:"authority_type"`
 	LoginType     int    `json:"loginType,omitempty" redis:"login_type"`
 	AuthType      int    `json:"authType,omitempty" redis:"auth_type"`
-	CreationDate  int64  `json:"creationData,omitempty" redis:"creation_data"`
+	CreationTime  int64  `json:"creationData,omitempty" redis:"creation_data"`
 	ExpiresAt     int64  `json:"expiresAt,omitempty" redis:"expires_at"`
 }
 
 func New(m *Multi) *MultiClaims {
 	claims := &MultiClaims{
 		Id:            strconv.FormatUint(uint64(m.Id), 10),
+		SuperAdmin:    m.SuperAdmin,
 		Username:      m.Username,
-		TenancyId:     m.TenancyId,
-		TenancyName:   m.TenancyName,
 		AuthorityId:   strings.Join(m.AuthorityIds, "-"),
 		AuthorityType: m.AuthorityType,
 		LoginType:     m.LoginType,
 		AuthType:      m.AuthType,
-		CreationDate:  time.Now().Local().Unix(),
+		CreationTime:  time.Now().Local().Unix(),
 		ExpiresAt:     m.ExpiresAt,
 	}
 	return claims

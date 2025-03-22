@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"context"
@@ -66,14 +66,13 @@ func (ra *RedisAuth) toCache(token string, cla *MultiClaims) error {
 	sKey := GtSessionTokenPrefix + token
 	if _, err := ra.Client.HMSet(context.Background(), sKey,
 		"id", cla.Id,
+		"super_admin", cla.SuperAdmin,
 		"login_type", cla.LoginType,
 		"auth_type", cla.AuthType,
 		"username", cla.Username,
-		"tenancy_id", cla.TenancyId,
-		"tenancy_name", cla.TenancyName,
 		"authority_id", cla.AuthorityId,
 		"authority_type", cla.AuthorityType,
-		"creation_data", cla.CreationDate,
+		"creation_data", cla.CreationTime,
 		"expires_at", cla.ExpiresAt,
 	).Result(); err != nil {
 		return fmt.Errorf("to cache token %w", err)
@@ -86,7 +85,7 @@ func (ra *RedisAuth) toCache(token string, cla *MultiClaims) error {
 	return nil
 }
 
-//  GetTokenByClaims 获取用户信息
+// GetTokenByClaims 获取用户信息
 func (ra *RedisAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 	userTokens, err := ra.getUserTokens(cla.AuthorityType, cla.Id)
 	if err != nil {
@@ -97,19 +96,15 @@ func (ra *RedisAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 		return "", err
 	}
 	for token, existCla := range clas {
-		if cla.AuthType == existCla.AuthType &&
-			cla.Id == existCla.Id &&
-			cla.AuthorityType == existCla.AuthorityType &&
-			cla.TenancyId == existCla.TenancyId &&
-			cla.AuthorityId == existCla.AuthorityId &&
-			cla.LoginType == existCla.LoginType {
+		if cla.AuthType == existCla.AuthType && cla.Id == existCla.Id && cla.AuthorityType == existCla.AuthorityType &&
+			cla.AuthorityId == existCla.AuthorityId && cla.LoginType == existCla.LoginType {
 			return token, nil
 		}
 	}
 	return "", nil
 }
 
-//  getMultiClaimses 获取用户信息
+// getMultiClaimses 获取用户信息
 func (ra *RedisAuth) getMultiClaimses(tokens []string) (map[string]*MultiClaims, error) {
 	clas := make(map[string]*MultiClaims, ra.getUserTokenMaxCount())
 	for _, token := range tokens {
@@ -123,14 +118,14 @@ func (ra *RedisAuth) getMultiClaimses(tokens []string) (map[string]*MultiClaims,
 	return clas, nil
 }
 
-//  GetMultiClaims 获取用户信息
+// GetMultiClaims 获取用户信息
 func (ra *RedisAuth) GetMultiClaims(token string) (*MultiClaims, error) {
 	cla := new(MultiClaims)
 	if err := ra.Client.HGetAll(context.Background(), GtSessionTokenPrefix+token).Scan(cla); err != nil {
 		return nil, fmt.Errorf("get custom claims redis hgetall %w", err)
 	}
 
-	if cla == nil || cla.Id == "" {
+	if cla.Id == "" {
 		return nil, ErrEmptyToken
 	}
 
@@ -217,7 +212,7 @@ func (ra *RedisAuth) syncUserTokenCache(token string) error {
 	return nil
 }
 
-//UpdateUserTokenCacheExpire 更新过期时间
+// UpdateUserTokenCacheExpire 更新过期时间
 func (ra *RedisAuth) UpdateUserTokenCacheExpire(token string) error {
 	rcc, err := ra.GetMultiClaims(token)
 	if err != nil {
@@ -258,9 +253,6 @@ func (ra *RedisAuth) DelUserTokenCache(token string) error {
 	}
 
 	err = ra.delTokenCache(token)
-	if err != nil {
-		return err
-	}
 	if err != nil {
 		return err
 	}
@@ -320,6 +312,15 @@ func (ra *RedisAuth) IsRole(token string, authorityType int) (bool, error) {
 		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
 	return rcc.AuthorityType == authorityType, nil
+}
+
+// IsSuperAdmin
+func (ra *RedisAuth) IsSuperAdmin(token string) bool {
+	rcc, err := ra.GetMultiClaims(token)
+	if err != nil {
+		return false
+	}
+	return rcc.SuperAdmin
 }
 
 // Close

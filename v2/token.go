@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"bytes"

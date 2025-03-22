@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ func NewLocalAuth() *LocalAuth {
 // GenerateToken
 func (la *LocalAuth) GenerateToken(claims *MultiClaims) (string, int64, error) {
 	if la.isUserTokenOver(claims.AuthorityType, claims.Id) {
-		return "", 0, errors.New("已达到同时登录设备上限")
+		return "", 0, ErrOverMaxTokenCount
 	}
 	token, err := GetToken()
 	if err != nil {
@@ -131,7 +131,7 @@ func (la *LocalAuth) GetMultiClaims(token string) (*MultiClaims, error) {
 	}
 }
 
-//  GetTokenByClaims 获取用户信息
+// GetTokenByClaims 获取用户信息
 func (la *LocalAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 	userTokens, err := la.getUserTokens(cla.AuthorityType, cla.Id)
 	if err != nil {
@@ -145,7 +145,6 @@ func (la *LocalAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 		if cla.AuthType == existCla.AuthType &&
 			cla.Id == existCla.Id &&
 			cla.AuthorityType == existCla.AuthorityType &&
-			cla.TenancyId == existCla.TenancyId &&
 			cla.AuthorityId == existCla.AuthorityId &&
 			cla.LoginType == existCla.LoginType {
 			return token, nil
@@ -162,7 +161,7 @@ func (la *LocalAuth) getUserTokens(authorityType int, userId string) (tokens, er
 	return nil, nil
 }
 
-//  getMultiClaimses 获取用户信息
+// getMultiClaimses 获取用户信息
 func (la *LocalAuth) getMultiClaimses(tokens tokens) (map[string]*MultiClaims, error) {
 	clas := make(map[string]*MultiClaims, la.getUserTokenMaxCount())
 	for _, token := range tokens {
@@ -244,6 +243,15 @@ func (la *LocalAuth) IsRole(token string, authorityType int) (bool, error) {
 		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
 	return rcc.AuthorityType == authorityType, nil
+}
+
+// IsRole
+func (la *LocalAuth) IsSuperAdmin(token string) bool {
+	rcc, err := la.GetMultiClaims(token)
+	if err != nil {
+		return false
+	}
+	return rcc.SuperAdmin
 }
 
 // 兼容 redis

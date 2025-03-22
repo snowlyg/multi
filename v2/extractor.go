@@ -1,4 +1,4 @@
-package gin
+package v2
 
 import (
 	"strings"

@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"errors"
@@ -23,9 +23,9 @@ var (
 
 // 错误类型
 var (
-	ErrTokenInvalid      = errors.New("TOKEN不可用")
-	ErrEmptyToken        = errors.New("TOKEN为空")
-	ErrOverMaxTokenCount = errors.New("已达到同时登录设备上限")
+	ErrTokenInvalid      = errors.New("token invalid")
+	ErrEmptyToken        = errors.New("token empty")
+	ErrOverMaxTokenCount = errors.New("token over device limit")
 )
 
 // 授权角色类型
@@ -97,9 +97,8 @@ func InitDriver(c *Config) error {
 // Multi
 type Multi struct {
 	Id            uint     `json:"id,omitempty"`
+	SuperAdmin    bool     `json:"superAdmin,omitempty"`
 	Username      string   `json:"username,omitempty"`
-	TenancyId     uint     `json:"tenancyId,omitempty"`
-	TenancyName   string   `json:"tenancyName,omitempty"`
 	AuthorityIds  []string `json:"authorityIds,omitempty"`
 	AuthorityType int      `json:"authorityType,omitempty"`
 	LoginType     int      `json:"loginType,omitempty"`
@@ -154,6 +153,7 @@ type Authentication interface {
 	CleanUserTokenCache(authorityType int, userId string) error // 清除用户所有 token
 	SetUserTokenMaxCount(tokenMaxCount int64) error             // 设置最大登录限制
 	IsRole(token string, authorityType int) (bool, error)
+	IsSuperAdmin(token string) bool
 	Close()
 }
 

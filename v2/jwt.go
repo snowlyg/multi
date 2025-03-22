@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"fmt"
@@ -36,12 +36,12 @@ func (ra *JwtAuth) GenerateToken(claims *MultiClaims) (string, int64, error) {
 	return tokenString, 0, nil
 }
 
-//  GetTokenByClaims 获取用户信息
+// GetTokenByClaims 获取用户信息
 func (ra *JwtAuth) GetTokenByClaims(cla *MultiClaims) (string, error) {
 	return "", nil
 }
 
-//  GetMultiClaims 获取用户信息
+// GetMultiClaims 获取用户信息
 func (ra *JwtAuth) GetMultiClaims(tokenString string) (*MultiClaims, error) {
 	mc := &MultiClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, mc, func(token *jwt.Token) (interface{}, error) {
@@ -67,7 +67,7 @@ func (ra *JwtAuth) SetUserTokenMaxCount(tokenMaxCount int64) error {
 	return nil
 }
 
-//UpdateUserTokenCacheExpire 更新过期时间
+// UpdateUserTokenCacheExpire 更新过期时间
 func (ra *JwtAuth) UpdateUserTokenCacheExpire(token string) error {
 	return nil
 }
@@ -89,6 +89,15 @@ func (ra *JwtAuth) IsRole(token string, authorityType int) (bool, error) {
 		return false, fmt.Errorf("get User's infomation return error: %w", err)
 	}
 	return rcc.AuthorityType == authorityType, nil
+}
+
+// IsSuperAdmin
+func (ra *JwtAuth) IsSuperAdmin(token string) bool {
+	rcc, err := ra.GetMultiClaims(token)
+	if err != nil {
+		return false
+	}
+	return rcc.SuperAdmin
 }
 
 // Close

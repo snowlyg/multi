@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"fmt"
@@ -12,8 +12,6 @@ var (
 		&Multi{
 			Id:            uint(8457585),
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
@@ -47,12 +45,6 @@ func TestJwtGenerateToken(t *testing.T) {
 		if cc.Username != jwtClaims.Username {
 			t.Errorf("get custom username want %v but get %v", jwtClaims.Username, cc.Username)
 		}
-		if cc.TenancyName != jwtClaims.TenancyName {
-			t.Errorf("get custom tenancy_id want %v but get %v", jwtClaims.TenancyName, cc.TenancyName)
-		}
-		if cc.TenancyId != jwtClaims.TenancyId {
-			t.Errorf("get custom tenancy_id want %v but get %v", jwtClaims.TenancyId, cc.TenancyId)
-		}
 		if cc.AuthorityId != jwtClaims.AuthorityId {
 			t.Errorf("get custom authority_id want %v but get %v", jwtClaims.AuthorityId, cc.AuthorityId)
 		}
@@ -65,8 +57,8 @@ func TestJwtGenerateToken(t *testing.T) {
 		if cc.AuthType != jwtClaims.AuthType {
 			t.Errorf("get custom auth_type want %v but get %v", jwtClaims.AuthType, cc.AuthType)
 		}
-		if cc.CreationDate != jwtClaims.CreationDate {
-			t.Errorf("get custom creation_data want %v but get %v", jwtClaims.CreationDate, cc.CreationDate)
+		if cc.CreationTime != jwtClaims.CreationTime {
+			t.Errorf("get custom creation_data want %v but get %v", jwtClaims.CreationTime, cc.CreationTime)
 		}
 		if cc.ExpiresAt != jwtClaims.ExpiresAt {
 			t.Errorf("get custom expires_at want %v but get %v", jwtClaims.ExpiresAt, cc.ExpiresAt)

@@ -1,4 +1,4 @@
-package multi
+package v2
 
 import (
 	"errors"
@@ -13,9 +13,8 @@ var (
 	customClaims = New(
 		&Multi{
 			Id:            uint(1),
+			SuperAdmin:    true,
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
@@ -58,12 +57,6 @@ func TestGenerateToken(t *testing.T) {
 		if cc.Username != customClaims.Username {
 			t.Errorf("get custom username want %v but get %v", customClaims.Username, cc.Username)
 		}
-		if cc.TenancyName != customClaims.TenancyName {
-			t.Errorf("get custom tenancy_id want %v but get %v", customClaims.TenancyName, cc.TenancyName)
-		}
-		if cc.TenancyId != customClaims.TenancyId {
-			t.Errorf("get custom tenancy_id want %v but get %v", customClaims.TenancyId, cc.TenancyId)
-		}
 		if cc.AuthorityId != customClaims.AuthorityId {
 			t.Errorf("get custom authority_id want %v but get %v", customClaims.AuthorityId, cc.AuthorityId)
 		}
@@ -76,8 +69,8 @@ func TestGenerateToken(t *testing.T) {
 		if cc.AuthType != customClaims.AuthType {
 			t.Errorf("get custom auth_type want %v but get %v", customClaims.AuthType, cc.AuthType)
 		}
-		if cc.CreationDate != customClaims.CreationDate {
-			t.Errorf("get custom creation_data want %v but get %v", customClaims.CreationDate, cc.CreationDate)
+		if cc.CreationTime != customClaims.CreationTime {
+			t.Errorf("get custom creation_data want %v but get %v", customClaims.CreationTime, cc.CreationTime)
 		}
 		if cc.ExpiresAt != customClaims.ExpiresAt {
 			t.Errorf("get custom expires_at want %v but get %v", customClaims.ExpiresAt, cc.ExpiresAt)
@@ -119,12 +112,6 @@ func TestToCache(t *testing.T) {
 		if cc.Username != customClaims.Username {
 			t.Errorf("get custom username want %v but get %v", customClaims.Username, cc.Username)
 		}
-		if cc.TenancyName != customClaims.TenancyName {
-			t.Errorf("get custom tenancy_id want %v but get %v", customClaims.TenancyName, cc.TenancyName)
-		}
-		if cc.TenancyId != customClaims.TenancyId {
-			t.Errorf("get custom tenancy_id want %v but get %v", customClaims.TenancyId, cc.TenancyId)
-		}
 		if cc.AuthorityId != customClaims.AuthorityId {
 			t.Errorf("get custom authority_id want %v but get %v", customClaims.AuthorityId, cc.AuthorityId)
 		}
@@ -137,8 +124,8 @@ func TestToCache(t *testing.T) {
 		if cc.AuthType != customClaims.AuthType {
 			t.Errorf("get custom auth_type want %v but get %v", customClaims.AuthType, cc.AuthType)
 		}
-		if cc.CreationDate != customClaims.CreationDate {
-			t.Errorf("get custom creation_data want %v but get %v", customClaims.CreationDate, cc.CreationDate)
+		if cc.CreationTime != customClaims.CreationTime {
+			t.Errorf("get custom creation_data want %v but get %v", customClaims.CreationTime, cc.CreationTime)
 		}
 		if cc.ExpiresAt != customClaims.ExpiresAt {
 			t.Errorf("get custom expires_at want %v but get %v", customClaims.ExpiresAt, cc.ExpiresAt)
@@ -151,8 +138,7 @@ func TestDelUserTokenCache(t *testing.T) {
 		&Multi{
 			Id:            uint(2),
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
+			SuperAdmin:    true,
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
@@ -190,8 +176,7 @@ func TestIsUserTokenOver(t *testing.T) {
 		&Multi{
 			Id:            uint(3),
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
+			SuperAdmin:    true,
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
@@ -280,8 +265,7 @@ func TestLocalGetUserTokens(t *testing.T) {
 		&Multi{
 			Id:            uint(121321),
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
+			SuperAdmin:    true,
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
@@ -326,8 +310,7 @@ func TestLocalGetTokenByClaims(t *testing.T) {
 		&Multi{
 			Id:            uint(3232),
 			Username:      "username",
-			TenancyId:     1,
-			TenancyName:   "username",
+			SuperAdmin:    true,
 			AuthorityIds:  []string{"999"},
 			AuthorityType: AdminAuthority,
 			LoginType:     LoginTypeWeb,
